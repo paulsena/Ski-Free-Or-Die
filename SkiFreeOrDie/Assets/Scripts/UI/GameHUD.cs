@@ -95,6 +95,12 @@ public class GameHUD : MonoBehaviour
             UpdateDistance();
             UpdateYetiDistance();
         }
+
+        // Press Enter to restart at any time
+        if (gameManager != null && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        {
+            gameManager.RestartGame();
+        }
     }
 
     private void UpdateTimer()

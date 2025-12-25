@@ -171,9 +171,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b30507a831ea4cb3a025223a5c49432, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SkiFreeOrDie::SkierController
-  baseSpeed: 100
-  tuckBonus: 0.12
-  maxSpeed: 200
+  baseSpeed: 40
+  tuckBonus: 0.15
+  maxSpeed: 80
   lowSpeedThreshold: 40
   highSpeedThreshold: 60
   tuckTurnPenalty: 0.6

@@ -4,29 +4,25 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class SkierController : MonoBehaviour
 {
-    [Header("Stats")]
-    [SerializeField] private float baseSpeed = 100f;
-    [SerializeField] private float tuckBonus = 0.12f;
-    [SerializeField] private float maxSpeed = 200f;
-
-    [Header("Turning")]
-    [SerializeField] private float lowSpeedThreshold = 40f;
-    [SerializeField] private float highSpeedThreshold = 60f;
-    [SerializeField] private float tuckTurnPenalty = 0.6f;
-    [SerializeField] private float turnSpeed = 180f; // Degrees per second
+    [Header("Speed Settings")]
+    [SerializeField] private float baseSpeed = 25f;
+    [SerializeField] private float tuckBonus = 0.2f;
+    [SerializeField] private float maxSpeed = 40f;
 
     [Header("Current State")]
+    [SerializeField] private SkiDirection currentDirection = SkiDirection.Down;
     [SerializeField] private bool isTucking;
     [SerializeField] private float currentSpeed;
     [SerializeField] private float currentSlopeMultiplier = 1f;
     [SerializeField] private bool isCrashed;
 
     private Rigidbody2D rb;
-    private SkierStats stats;
-    private TurnCalculator turnCalculator;
-    private float targetAngle;
+    private SpriteRenderer spriteRenderer;
     private bool wasTucking;
+    private bool leftWasPressed;
+    private bool rightWasPressed;
 
+    public SkiDirection CurrentDirection => currentDirection;
     public bool IsTucking => isTucking;
     public float CurrentSpeed => currentSpeed;
     public bool IsCrashed => isCrashed;
@@ -34,22 +30,13 @@ public class SkierController : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        rb.gravityScale = 0; // We handle movement manually
-
-        stats = new SkierStats(baseSpeed, tuckBonus);
-        turnCalculator = new TurnCalculator(
-            lowSpeedThreshold,
-            highSpeedThreshold,
-            maxSpeed,
-            tuckTurnPenalty
-        );
-
-        targetAngle = 0f; // Facing down
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        rb.gravityScale = 0;
+        currentDirection = SkiDirection.Down;
     }
 
     private void Start()
     {
-        // Start ski loop sound
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.StartLoop(GameAudioType.SkiLoop);
@@ -71,27 +58,24 @@ public class SkierController : MonoBehaviour
     {
         if (isCrashed) return;
 
-        // Tuck: Hold down arrow or left shift
         isTucking = Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.LeftShift);
 
-        // Turn: Left/Right arrows or A/D
-        float turnInput = 0f;
-        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+        bool leftPressed = Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A);
+        bool rightPressed = Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D);
+
+        int directionIndex = (int)currentDirection;
+
+        if (leftPressed && !leftWasPressed)
         {
-            turnInput = 1f; // Turn left (positive rotation in Unity 2D)
+            currentDirection = SkiDirectionExtensions.FromIndex(directionIndex - 1);
         }
-        else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+        if (rightPressed && !rightWasPressed)
         {
-            turnInput = -1f; // Turn right (negative rotation)
+            currentDirection = SkiDirectionExtensions.FromIndex(directionIndex + 1);
         }
 
-        // Apply turn with response factor
-        float turnResponse = turnCalculator.GetTurnResponse(currentSpeed);
-        float radiusMultiplier = turnCalculator.GetTurnRadius(isTucking);
-        float effectiveTurnSpeed = turnSpeed * turnResponse / radiusMultiplier;
-
-        targetAngle += turnInput * effectiveTurnSpeed * Time.deltaTime;
-        targetAngle = Mathf.Clamp(targetAngle, -80f, 80f); // Limit turning angle
+        leftWasPressed = leftPressed;
+        rightWasPressed = rightPressed;
     }
 
     private void UpdateAudio()
@@ -99,7 +83,6 @@ public class SkierController : MonoBehaviour
         if (isCrashed) return;
         if (AudioManager.Instance == null) return;
 
-        // Crossfade between ski and tuck wind loop
         if (isTucking != wasTucking)
         {
             wasTucking = isTucking;
@@ -113,7 +96,6 @@ public class SkierController : MonoBehaviour
             }
         }
 
-        // Adjust loop volume based on speed
         float speedNormalized = Mathf.Clamp01(currentSpeed / maxSpeed);
         AudioManager.Instance.SetLoopVolume(0.3f + speedNormalized * 0.7f);
     }
@@ -122,32 +104,40 @@ public class SkierController : MonoBehaviour
     {
         if (isCrashed) return;
 
-        // Calculate effective speed
-        currentSpeed = stats.GetEffectiveSpeed(isTucking, currentSlopeMultiplier);
+        // Calculate speed with tuck bonus and direction multiplier
+        float effectiveSpeed = baseSpeed * currentSlopeMultiplier;
+        if (isTucking) effectiveSpeed *= (1f + tuckBonus);
+
+        currentSpeed = effectiveSpeed * currentDirection.GetSpeedMultiplier();
         currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
 
-        // Convert angle to direction (0 = down, positive = left, negative = right)
-        float radians = (targetAngle - 90f) * Mathf.Deg2Rad;
-        Vector2 direction = new Vector2(Mathf.Cos(radians), Mathf.Sin(radians));
+        // Apply velocity using pre-computed direction vector
+        rb.linearVelocity = currentDirection.GetDirection() * currentSpeed;
 
-        // Apply velocity (using velocity for Unity 2022 LTS compatibility)
-        rb.linearVelocity = direction * currentSpeed;
+        // Flip sprite for left turns (direction index < 3 means turning left)
+        int dirIndex = (int)currentDirection;
+        bool turningLeft = dirIndex < 3;
 
-        // Rotate sprite to match direction
-        transform.rotation = Quaternion.Euler(0, 0, targetAngle);
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.flipX = turningLeft;
+        }
+
+        // Use absolute rotation for magnitude
+        // Negate when flipping because flip reverses the visual rotation direction
+        float rotation = Mathf.Abs(currentDirection.GetRotation());
+        if (turningLeft)
+        {
+            rotation = -rotation;
+        }
+        transform.rotation = Quaternion.Euler(0, 0, rotation);
     }
 
-    /// <summary>
-    /// Called by tile system to update slope intensity.
-    /// </summary>
     public void SetSlopeMultiplier(float multiplier)
     {
         currentSlopeMultiplier = multiplier;
     }
 
-    /// <summary>
-    /// Called by collision handler to set crash state.
-    /// </summary>
     public void SetCrashed(bool crashed)
     {
         isCrashed = crashed;
@@ -158,20 +148,19 @@ public class SkierController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Called by collision handler for non-crash collisions.
-    /// </summary>
     public void ApplySpeedPenalty(float multiplier)
     {
         currentSpeed *= multiplier;
     }
 
-    /// <summary>
-    /// Called by collision handler for deflection on tree hits.
-    /// </summary>
-    public void ApplyDeflection(float angle)
+    public void ApplyDeflection(int steps)
     {
-        targetAngle += angle;
-        targetAngle = Mathf.Clamp(targetAngle, -80f, 80f);
+        int newIndex = (int)currentDirection + steps;
+        currentDirection = SkiDirectionExtensions.FromIndex(newIndex);
+    }
+
+    public void SetDirection(SkiDirection direction)
+    {
+        currentDirection = direction;
     }
 }

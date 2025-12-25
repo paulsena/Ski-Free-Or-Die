@@ -45,14 +45,17 @@ public class SkierCollisionHandler : MonoBehaviour
         {
             // Apply speed penalty and deflection
             float penalty = obstacle.GetSpeedPenalty();
-            float deflection = obstacle.GetDeflectionAngle();
+            float deflectionAngle = obstacle.GetDeflectionAngle();
 
             // Determine deflection direction based on collision normal
             Vector2 normal = collision.contacts[0].normal;
-            float deflectionDirection = normal.x > 0 ? 1f : -1f;
+            int deflectionDir = normal.x > 0 ? 1 : -1;
+
+            // Convert angle to discrete steps (each step is 30°)
+            int steps = Mathf.RoundToInt(deflectionAngle / 30f) * deflectionDir;
 
             skierController.ApplySpeedPenalty(penalty);
-            skierController.ApplyDeflection(deflection * deflectionDirection);
+            skierController.ApplyDeflection(steps);
 
             // Play obstacle hit sound
             PlayObstacleHitSound(obstacle.Type);
