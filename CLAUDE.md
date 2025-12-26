@@ -45,6 +45,13 @@ cd SkiFreeOrDie
 love .
 ```
 
+## Testing
+
+Run unit tests using the `--test` flag:
+```bash
+love . --test
+```
+
 ## Code Structure
 
 ```

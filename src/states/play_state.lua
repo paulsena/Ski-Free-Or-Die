@@ -21,7 +21,7 @@ function PlayState:enter(params)
 
     -- Initialize camera
     self.camera = Camera.new()
-    self.camera:set_offset(GAME_WIDTH / 2, GAME_HEIGHT * 0.7)
+    self.camera:set_offset(GAME_WIDTH / 2, GAME_HEIGHT * 0.3)
 
     -- Initialize skier
     self.skier = Skier.new(0, 0)
@@ -101,7 +101,7 @@ function PlayState:update(dt)
         self.particles:emit_snow_spray(
             self.skier.x,
             self.skier.y,
-            self.skier.angle,
+            self.skier:get_angle(),
             self.skier.speed,
             is_turning
         )
@@ -118,7 +118,7 @@ function PlayState:update(dt)
 end
 
 function PlayState:check_collisions()
-    if self.skier.is_crashed then
+    if self.skier.is_crashed or self.skier.is_immune then
         return
     end
 

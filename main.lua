@@ -12,7 +12,17 @@ local GAME_HEIGHT = 180
 -- Canvas for pixel-perfect rendering
 local canvas
 
-function love.load()
+function love.load(args)
+    -- Check for test mode
+    if args then
+        for _, arg in ipairs(args) do
+            if arg == "--test" then
+                require("test.suite")
+                return -- Stop loading the game
+            end
+        end
+    end
+
     -- Set up pixel-perfect rendering
     love.graphics.setDefaultFilter("nearest", "nearest")
     canvas = love.graphics.newCanvas(GAME_WIDTH, GAME_HEIGHT)

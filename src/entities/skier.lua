@@ -6,18 +6,39 @@ local Utils = require("src.lib.utils")
 
 local Skier = {}
 
--- Physics constants (from physics-tuck-mechanics-design.md)
-Skier.BASE_SPEED = 80              -- Base downhill speed (pixels/sec)
-Skier.MAX_SPEED = 200              -- Maximum speed
-Skier.TURN_SPEED = 120             -- Turn rate in degrees/sec
+-- Discrete positions (like original SkiFree)
+-- Each position maps to an angle and can have a sprite assigned
+Skier.POSITIONS = {
+    { name = "FULL_LEFT",   angle = -80, speed_mult = 0.35 }, -- 1: Hard brake left (slow creep)
+    { name = "FAR_LEFT",    angle = -60, speed_mult = 1.0 },  -- 2: Sharp left (geometry only)
+    { name = "LEFT",        angle = -30, speed_mult = 1.0 },  -- 3: Gentle left (geometry only)
+    { name = "CENTER",      angle = 0,   speed_mult = 1.0 },  -- 4: Straight down (full speed)
+    { name = "RIGHT",       angle = 30,  speed_mult = 1.0 },  -- 5: Gentle right (geometry only)
+    { name = "FAR_RIGHT",   angle = 60,  speed_mult = 1.0 },  -- 6: Sharp right (geometry only)
+    { name = "FULL_RIGHT",  angle = 80,  speed_mult = 0.35 }, -- 7: Hard brake right (slow creep)
+}
+
+-- Position index constants for easy reference
+Skier.POS_FULL_LEFT = 1
+Skier.POS_FAR_LEFT = 2
+Skier.POS_LEFT = 3
+Skier.POS_CENTER = 4
+Skier.POS_RIGHT = 5
+Skier.POS_FAR_RIGHT = 6
+Skier.POS_FULL_RIGHT = 7
+
+-- Physics constants
+Skier.BASE_SPEED = 110             -- Base downhill speed (pixels/sec)
+Skier.MAX_SPEED = 250              -- Maximum speed
 Skier.TUCK_SPEED_BONUS = 0.12      -- 12% speed increase when tucking
-Skier.TUCK_TURN_PENALTY = 0.5      -- 50% reduction in turn rate when tucking
-Skier.SPEED_TURN_DAMPING = 0.4     -- How much speed affects turn rate
-Skier.MAX_ANGLE = 80               -- Maximum turn angle in degrees
-Skier.CRASH_DURATION = 1.75        -- Recovery time after crash
+Skier.CRASH_DURATION = 1.0         -- Recovery time after crash
+Skier.IMMUNITY_DURATION = 1.0      -- Immunity time after crash recovery
 Skier.HITBOX_RADIUS = 5            -- Forgiving collision radius
 Skier.DEFLECT_VX_FACTOR = 0.8      -- How much X velocity reverses on deflect
-Skier.DEFLECT_ANGLE_FACTOR = 0.5   -- How much angle reverses on deflect
+
+-- Input timing
+Skier.KEY_REPEAT_DELAY = 0.15      -- Delay before key repeat starts
+Skier.KEY_REPEAT_RATE = 0.08       -- Time between position changes when holding
 
 function Skier.new(x, y)
     local self = {
@@ -25,17 +46,31 @@ function Skier.new(x, y)
         y = y or 0,
         vx = 0,
         vy = Skier.BASE_SPEED,
-        angle = 0,               -- Current facing angle in degrees
-        target_angle = 0,        -- Target angle from input
+        position = Skier.POS_CENTER,  -- Current position index (1-7)
         speed = Skier.BASE_SPEED,
         is_tucking = false,
         is_crashed = false,
         crash_timer = 0,
+        is_immune = false,
+        immunity_timer = 0,
+        -- Input state for key repeat
+        left_held = false,
+        right_held = false,
+        key_timer = 0,
+        key_repeat_started = false,
         -- Animation state
         anim_timer = 0,
-        ski_spread = 1           -- For subtle animation
+        ski_spread = 1
     }
     return setmetatable(self, {__index = Skier})
+end
+
+function Skier:get_position_data()
+    return Skier.POSITIONS[self.position]
+end
+
+function Skier:get_angle()
+    return self:get_position_data().angle
 end
 
 function Skier:handle_input(dt)
@@ -43,13 +78,8 @@ function Skier:handle_input(dt)
         return
     end
 
-    -- Get input direction
-    local turn_input = 0
-    if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
-        turn_input = -1
-    elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
-        turn_input = 1
-    end
+    local left_down = love.keyboard.isDown("left") or love.keyboard.isDown("a")
+    local right_down = love.keyboard.isDown("right") or love.keyboard.isDown("d")
 
     -- Tuck state
     self.is_tucking = love.keyboard.isDown("down") or
@@ -57,19 +87,59 @@ function Skier:handle_input(dt)
                       love.keyboard.isDown("lshift") or
                       love.keyboard.isDown("rshift")
 
-    -- Calculate turn rate based on speed and tuck state
-    local speed_factor = 1 - (self.speed / Skier.MAX_SPEED) * Skier.SPEED_TURN_DAMPING
-    local tuck_factor = self.is_tucking and Skier.TUCK_TURN_PENALTY or 1
-    local effective_turn_rate = Skier.TURN_SPEED * speed_factor * tuck_factor
-
-    -- Update target angle
-    self.target_angle = self.target_angle + turn_input * effective_turn_rate * dt
-    self.target_angle = Utils.clamp(self.target_angle, -Skier.MAX_ANGLE, Skier.MAX_ANGLE)
-
-    -- Return to center when no input
-    if turn_input == 0 then
-        self.target_angle = self.target_angle * 0.95
+    -- Handle left key
+    if left_down and not self.left_held then
+        -- Key just pressed - move one position
+        self:move_position(-1)
+        self.left_held = true
+        self.key_timer = 0
+        self.key_repeat_started = false
+    elseif left_down and self.left_held then
+        -- Key held - handle repeat
+        self.key_timer = self.key_timer + dt
+        if not self.key_repeat_started then
+            if self.key_timer >= Skier.KEY_REPEAT_DELAY then
+                self.key_repeat_started = true
+                self.key_timer = 0
+            end
+        else
+            if self.key_timer >= Skier.KEY_REPEAT_RATE then
+                self:move_position(-1)
+                self.key_timer = 0
+            end
+        end
+    elseif not left_down then
+        self.left_held = false
     end
+
+    -- Handle right key
+    if right_down and not self.right_held then
+        -- Key just pressed - move one position
+        self:move_position(1)
+        self.right_held = true
+        self.key_timer = 0
+        self.key_repeat_started = false
+    elseif right_down and self.right_held then
+        -- Key held - handle repeat
+        self.key_timer = self.key_timer + dt
+        if not self.key_repeat_started then
+            if self.key_timer >= Skier.KEY_REPEAT_DELAY then
+                self.key_repeat_started = true
+                self.key_timer = 0
+            end
+        else
+            if self.key_timer >= Skier.KEY_REPEAT_RATE then
+                self:move_position(1)
+                self.key_timer = 0
+            end
+        end
+    elseif not right_down then
+        self.right_held = false
+    end
+end
+
+function Skier:move_position(delta)
+    self.position = Utils.clamp(self.position + delta, 1, #Skier.POSITIONS)
 end
 
 function Skier:update(dt, slope_bounds)
@@ -81,27 +151,40 @@ function Skier:update(dt, slope_bounds)
         self.crash_timer = self.crash_timer - dt
         if self.crash_timer <= 0 then
             self.is_crashed = false
+            self.is_immune = true
+            self.immunity_timer = Skier.IMMUNITY_DURATION
             self.speed = Skier.BASE_SPEED * 0.5
+            self.position = Skier.POS_CENTER
         end
         return
     end
 
-    -- Smoothly interpolate angle
-    self.angle = Utils.lerp(self.angle, self.target_angle, dt * 8)
+    -- Handle immunity countdown
+    if self.is_immune then
+        self.immunity_timer = self.immunity_timer - dt
+        if self.immunity_timer <= 0 then
+            self.is_immune = false
+        end
+    end
 
-    -- Calculate speed with tuck bonus
-    local target_speed = Skier.BASE_SPEED
-    if self.is_tucking then
-        target_speed = Skier.BASE_SPEED * (1 + Skier.TUCK_SPEED_BONUS)
+    -- Get current position data
+    local pos_data = self:get_position_data()
+    local angle = pos_data.angle
+    local speed_mult = pos_data.speed_mult
+
+    -- Calculate target speed based on position and tuck
+    local target_speed = Skier.BASE_SPEED * speed_mult
+    if self.is_tucking and speed_mult > 0 then
+        target_speed = target_speed * (1 + Skier.TUCK_SPEED_BONUS)
     end
 
     -- Accelerate/decelerate towards target speed
-    self.speed = Utils.lerp(self.speed, target_speed, dt * 2)
+    self.speed = Utils.lerp(self.speed, target_speed, dt * 4)
     self.speed = Utils.clamp(self.speed, 0, Skier.MAX_SPEED)
 
     -- Calculate velocity based on angle
-    local angle_rad = Utils.deg_to_rad(self.angle)
-    self.vx = math.sin(angle_rad) * self.speed * 0.8
+    local angle_rad = Utils.deg_to_rad(angle)
+    self.vx = math.sin(angle_rad) * self.speed
     self.vy = math.cos(angle_rad) * self.speed
 
     -- Apply velocity
@@ -135,7 +218,12 @@ end
 
 function Skier:deflect(direction)
     self.vx = -self.vx * Skier.DEFLECT_VX_FACTOR
-    self.target_angle = -self.target_angle * Skier.DEFLECT_ANGLE_FACTOR
+    -- Move position towards center on deflect
+    if self.position < Skier.POS_CENTER then
+        self.position = math.min(self.position + 2, Skier.POS_CENTER)
+    elseif self.position > Skier.POS_CENTER then
+        self.position = math.max(self.position - 2, Skier.POS_CENTER)
+    end
 end
 
 function Skier:get_hitbox()
@@ -149,12 +237,20 @@ end
 function Skier:draw()
     love.graphics.push()
     love.graphics.translate(self.x, self.y)
-    love.graphics.rotate(Utils.deg_to_rad(-self.angle))
+    love.graphics.rotate(Utils.deg_to_rad(-self:get_angle()))
 
-    if self.is_crashed then
-        self:draw_crashed()
-    else
-        self:draw_normal()
+    -- Flash effect during immunity (blink on/off rapidly)
+    local visible = true
+    if self.is_immune then
+        visible = math.floor(self.anim_timer * 10) % 2 == 0
+    end
+
+    if visible then
+        if self.is_crashed then
+            self:draw_crashed()
+        else
+            self:draw_normal()
+        end
     end
 
     love.graphics.pop()

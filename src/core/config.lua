@@ -4,9 +4,9 @@
 local Config = {}
 
 -- Display settings
-Config.GAME_WIDTH = 320
-Config.GAME_HEIGHT = 180
-Config.SCALE = 3
+Config.GAME_WIDTH = 480
+Config.GAME_HEIGHT = 270
+Config.SCALE = 4
 
 -- Physics
 Config.BASE_SPEED = 80
