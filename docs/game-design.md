@@ -35,9 +35,9 @@
 
 ## **3. Technical Architecture**
 
-* **Frontend:** **Unity (C#)** for physics-based movement and pixel-perfect rendering.
-* **Backend:** **Go (Golang)** for high-performance seed distribution, leaderboard validation, and score security.
-* **Input:** High-response "slippery" physics (inspired by SkiFree) adapted for modern touch and keyboard controls.
+* **Frontend:** **LÖVE (Love2D) with Lua** for physics-based movement and pixel-perfect rendering. Lightweight, cross-platform, and perfect for retro 2D games.
+* **Backend:** **Go (Golang)** for high-performance seed distribution, leaderboard validation, and score security (Phase 2).
+* **Input:** High-response "slippery" physics (inspired by SkiFree) adapted for modern keyboard controls.
 
 ## **4. Key Design Elements**
 

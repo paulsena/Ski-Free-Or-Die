@@ -3,6 +3,9 @@
 **Date:** 2025-12-23
 **Status:** Validated
 **Mode:** Endless Descent only
+**Engine:** Love2D (Lua) - Engine-agnostic design
+
+> **For AI Agents:** This document defines Yeti *behavior*. Implementation in `src/entities/yeti.lua`. This is a Phase 7 (Nice to Have) feature.
 
 ---
 

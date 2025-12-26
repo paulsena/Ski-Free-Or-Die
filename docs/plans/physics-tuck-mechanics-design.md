@@ -2,12 +2,15 @@
 
 **Date:** 2025-12-23
 **Status:** Validated
+**Engine:** Love2D (Lua) - Engine-agnostic design, implement with manual velocity/position updates
+
+> **For AI Agents:** This document defines the physics *behavior*. Implementation will be in Lua with Love2D's update loop. No physics engine needed - we handle velocity and collision manually.
 
 ---
 
 ## Overview
 
-This document defines the physics system for Retro Slope, covering movement, tuck mechanics, collision, terrain, and air physics. The goal is a skill-based system inspired by SkiFree's "slippery" feel with modern depth for competitive leaderboards.
+This document defines the physics system for Ski Free Or Die!, covering movement, tuck mechanics, collision, terrain, and air physics. The goal is a skill-based system inspired by SkiFree's "slippery" feel with modern depth for competitive leaderboards.
 
 ---
 

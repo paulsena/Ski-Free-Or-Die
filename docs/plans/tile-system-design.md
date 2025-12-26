@@ -2,12 +2,15 @@
 
 **Date:** 2025-12-23
 **Status:** Validated
+**Engine:** Love2D (Lua) - Engine-agnostic design
+
+> **For AI Agents:** This document defines tile *types and generation rules*. Implementation in `src/world/tile_generator.lua` and `src/world/tile_data.lua`.
 
 ---
 
 ## Overview
 
-This document defines the procedural tile system for Retro Slope's map generation. The goal is a hybrid system that balances retro homage (SkiFree, California Games, Skate or Die) with modern game design for competitive fairness and player agency.
+This document defines the procedural tile system for Ski Free Or Die!'s map generation. The goal is a hybrid system that balances retro homage (SkiFree, California Games, Skate or Die) with modern game design for competitive fairness and player agency.
 
 ---
 
