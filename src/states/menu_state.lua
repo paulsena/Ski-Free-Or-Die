@@ -3,6 +3,7 @@
 
 local Colors = require("src.colors")
 local StateManager = require("src.core.state_manager")
+local Music = require("src.lib.music")
 
 local MenuState = {}
 
@@ -29,6 +30,9 @@ function MenuState:enter()
             size = math.random(1, 2)
         })
     end
+
+    -- Play menu music
+    Music.play("menu")
 end
 
 function MenuState:exit()
@@ -126,7 +130,7 @@ function MenuState:draw()
 
     -- Draw controls hint
     love.graphics.setColor(0.7, 0.7, 0.8)
-    love.graphics.printf("Arrow Keys: Steer | Down/Shift: Tuck | ESC: Menu", 0, 168, GAME_WIDTH, "center")
+    love.graphics.printf("Arrows: Steer | Down: Tuck | M: Mute | ESC: Menu", 0, 168, GAME_WIDTH, "center")
 end
 
 function MenuState:draw_wavy_title(text, start_x, y)
@@ -168,6 +172,13 @@ function MenuState:keypressed(key)
         end
     elseif key == "return" or key == "space" then
         self:select_option()
+    elseif key == "m" then
+        -- Toggle mute
+        if Music.get_volume() > 0 then
+            Music.set_volume(0)
+        else
+            Music.set_volume(0.7)
+        end
     end
 end
 

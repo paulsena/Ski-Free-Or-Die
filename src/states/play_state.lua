@@ -9,6 +9,7 @@ local Yeti = require("src.entities.yeti")
 local WorldManager = require("src.world.world_manager")
 local Collision = require("src.systems.collision")
 local Particles = require("src.systems.particles")
+local Music = require("src.lib.music")
 
 local PlayState = {}
 
@@ -55,6 +56,9 @@ function PlayState:enter(params)
     -- Snap camera to start position
     self.camera:set_target(self.skier.x, self.skier.y)
     self.camera:snap()
+
+    -- Play gameplay music
+    Music.play("gameplay")
 end
 
 function PlayState:exit()
@@ -164,6 +168,8 @@ end
 function PlayState:game_over(reason)
     self.is_finished = true
     self.game_over_reason = reason
+    -- Play game over music
+    Music.play("gameover")
 end
 
 function PlayState:draw()
@@ -402,6 +408,19 @@ function PlayState:keypressed(key)
         self:enter({mode = self.mode})
     elseif key == "p" and not self.is_finished then
         self.is_paused = not self.is_paused
+        -- Pause/resume music
+        if self.is_paused then
+            Music.pause()
+        else
+            Music.resume()
+        end
+    elseif key == "m" then
+        -- Toggle mute
+        if Music.get_volume() > 0 then
+            Music.set_volume(0)
+        else
+            Music.set_volume(0.7)
+        end
     end
 end
 
