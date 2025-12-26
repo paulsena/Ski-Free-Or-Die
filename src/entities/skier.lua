@@ -149,7 +149,7 @@ end
 function Skier:draw()
     love.graphics.push()
     love.graphics.translate(self.x, self.y)
-    love.graphics.rotate(Utils.deg_to_rad(self.angle))
+    love.graphics.rotate(Utils.deg_to_rad(-self.angle))
 
     if self.is_crashed then
         self:draw_crashed()
