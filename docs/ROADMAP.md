@@ -13,8 +13,8 @@
 | 0 | Project Setup | Love2D project structure, basic game loop | Complete |
 | 1 | Core Movement | Playable skier with physics | Complete |
 | 2 | World & Obstacles | Scrolling world, collision with obstacles | Complete |
-| 3 | Procedural Generation | Tile-based map generation from seed | Partial |
-| 4 | Game Loop | Timer, finish line, restart | Partial |
+| 3 | Procedural Generation | Tile-based map generation from seed | Complete |
+| 4 | Game Loop | Timer, finish line, restart | Complete |
 | 5 | Gates & Slalom | Gate system with penalties | Complete |
 | 6 | HUD & Polish | UI, visual feedback, basic audio | Partial |
 | 7 | Endless Mode | Infinite generation, Yeti chase | Complete |
@@ -133,19 +133,19 @@
   - Lua-based deterministic RNG (not math.random)
   - `src/lib/seeded_random.lua`
 
-- [ ] **3.2** Create tile data structure
+- [x] **3.2** Create tile data structure
   - TileType enum: Warmup, Slalom, ObstacleField, Speed, Ramp
   - SlopeIntensity: Gentle, Moderate, Steep
   - Obstacle spawn list per tile
   - `src/world/tile_data.lua`
 
-- [ ] **3.3** Create tile generator
+- [x] **3.3** Create tile generator
   - Generates list of TileData from seed
   - Difficulty progression over course
   - Pacing rules (no 2 hard tiles in a row)
   - `src/world/tile_generator.lua`
 
-- [ ] **3.4** Integrate tiles with world manager
+- [x] **3.4** Integrate tiles with world manager
   - Spawn obstacles based on tile definitions
   - Spawn/despawn tiles as camera moves
   - Apply slope multiplier to skier speed
@@ -170,14 +170,15 @@
   - Counts up from 0
   - Displays as MM:SS.ms
 
-- [ ] **4.2** Create finish line
+- [x] **4.2** Create finish line
   - Trigger zone at end of course
   - Stops timer, shows final time
+  - Integrated into world_manager.lua with checkered finish line
 
-- [ ] **4.3** Create game manager
+- [x] **4.3** Create game manager
   - Handles start/finish/restart
   - Tracks elapsed time
-  - `src/core/game_manager.lua`
+  - Integrated into play_state.lua and world_manager.lua
 
 - [x] **4.4** Implement restart
   - Press R or Enter to restart
@@ -203,9 +204,10 @@
   - Detects when player passes gate Y without triggering
   - Calculates total penalty
 
-- [ ] **5.3** Integrate gates into tile generation
+- [x] **5.3** Integrate gates into tile generation
   - Slalom tiles spawn 2-4 gates
   - Alternating left/right positions
+  - Integrated via tile_generator.lua populate_tile()
 
 - [x] **5.4** Add penalties to final time
   - Total Time = Elapsed + (Missed Gates * 3)
@@ -389,4 +391,4 @@ SkiFreeOrDie/
 4. Mark tasks complete with [x] when done
 5. Move to next phase when current is verified
 
-**Current Phase:** 0 - Project Setup
+**Current Phase:** 6 - HUD & Polish (remaining: sound effects)

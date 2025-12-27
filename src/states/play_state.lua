@@ -1,24 +1,24 @@
 -- src/states/play_state.lua
 -- Main gameplay state - uses modular entity system
 
-local Colors = require("src.colors")
-local Camera = require("src.lib.camera")
-local Utils = require("src.lib.utils")
 local Skier = require("src.entities.skier")
-local Yeti = require("src.entities.yeti")
+local Utils = require("src.lib.utils")
+local Camera = require("src.lib.camera")
+local Colors = require("src.colors")
 local WorldManager = require("src.world.world_manager")
-local Collision = require("src.systems.collision")
-local Particles = require("src.systems.particles")
+local Yeti = require("src.entities.yeti")
+local Config = require("src.core.config")
 local Music = require("src.lib.music")
+local Particles = require("src.systems.particles")
+local Collision = require("src.systems.collision")
 
 local PlayState = {}
 
-local GAME_WIDTH = 320
-local GAME_HEIGHT = 180
+local GAME_WIDTH = Config.GAME_WIDTH
+local GAME_HEIGHT = Config.GAME_HEIGHT
 
 function PlayState:enter(params)
-    params = params or {}
-    self.mode = params.mode or "timetrial"
+    self.mode = params and params.mode or "trial"
 
     -- Initialize camera
     self.camera = Camera.new()
@@ -28,8 +28,9 @@ function PlayState:enter(params)
     self.skier = Skier.new(0, 0)
     self.prev_skier_y = 0
 
-    -- Initialize world
-    self.world = WorldManager.new()
+    -- Initialize world with mode for tile-based generation
+    local world_mode = self.mode == "endless" and "endless" or "time_trial"
+    self.world = WorldManager.new(nil, world_mode)
     self.world:initial_spawn()
 
     -- Initialize game state
@@ -91,6 +92,11 @@ function PlayState:update(dt)
 
     -- Check gates
     self:check_gates()
+
+    -- Check finish line for time trial mode
+    if self.mode == "time_trial" and self.world:check_finish(self.skier.y) then
+        self:game_over("finished")
+    end
 
     -- Update distance
     self.distance = self.skier.y
@@ -187,12 +193,12 @@ function PlayState:draw()
     -- Draw skier
     self.skier:draw()
 
-    -- Draw yeti if in endless mode
+    self.camera:reset()
+
+    -- Draw yeti if in endless mode (in screen space, after camera reset)
     if self.yeti then
         self.yeti:draw(self.camera.y, GAME_HEIGHT)
     end
-
-    self.camera:reset()
 
     -- Draw HUD (not affected by camera)
     self:draw_hud()
@@ -355,10 +361,14 @@ function PlayState:draw_game_over()
     love.graphics.rectangle("fill", 0, 0, GAME_WIDTH, GAME_HEIGHT)
 
     -- Title
-    Colors.set(Colors.HOT_PINK)
     if self.game_over_reason == "caught" then
+        Colors.set(Colors.HOT_PINK)
         love.graphics.printf("EATEN BY YETI!", 0, 40, GAME_WIDTH, "center")
+    elseif self.game_over_reason == "finished" then
+        Colors.set(Colors.MINT_GREEN)
+        love.graphics.printf("TIME TRIAL COMPLETE!", 0, 40, GAME_WIDTH, "center")
     else
+        Colors.set(Colors.HOT_PINK)
         love.graphics.printf("RUN COMPLETE!", 0, 40, GAME_WIDTH, "center")
     end
 

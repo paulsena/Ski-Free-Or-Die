@@ -185,7 +185,7 @@ end
 function MenuState:select_option()
     if menu_selection == 1 then
         -- Start Game (Time Trial)
-        StateManager.switch("play", {mode = "timetrial"})
+        StateManager.switch("play", {mode = "time_trial"})
     elseif menu_selection == 2 then
         -- Endless Mode
         StateManager.switch("play", {mode = "endless"})

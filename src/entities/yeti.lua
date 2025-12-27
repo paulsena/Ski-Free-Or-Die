@@ -6,20 +6,20 @@ local Utils = require("src.lib.utils")
 
 local Yeti = {}
 
--- Yeti constants
+-- Yeti constants (scaled for 360x480 resolution)
 Yeti.BASE_SPEED = 70               -- Base speed (slightly slower than skier)
 Yeti.SPEED_INCREASE_RATE = 0.01    -- Speed increase per second
-Yeti.CATCH_DISTANCE = 20           -- Distance at which yeti catches player
-Yeti.START_DISTANCE = -500         -- Starting distance behind player
+Yeti.CATCH_DISTANCE = 30           -- Distance at which yeti catches player
+Yeti.START_DISTANCE = -300         -- Starting distance behind player (closer for more tension)
 Yeti.BOOST_ON_CRASH = 1.5          -- Speed multiplier when player crashes
-Yeti.WIDTH = 24
-Yeti.HEIGHT = 32
+Yeti.WIDTH = 36
+Yeti.HEIGHT = 48
 
--- Yeti danger zones
-Yeti.ZONE_SAFE = 400               -- Beyond this, player is safe
-Yeti.ZONE_WARNING = 250            -- Warning zone starts here
-Yeti.ZONE_DANGER = 100             -- Danger zone starts here
-Yeti.ZONE_CRITICAL = 50            -- Critical zone - about to catch
+-- Yeti danger zones (scaled for 360x480 resolution)
+Yeti.ZONE_SAFE = 500               -- Beyond this, player is safe
+Yeti.ZONE_WARNING = 350            -- Warning zone starts here
+Yeti.ZONE_DANGER = 150             -- Danger zone starts here
+Yeti.ZONE_CRITICAL = 75            -- Critical zone - about to catch
 
 function Yeti.new()
     local self = {
@@ -105,7 +105,7 @@ end
 
 function Yeti:draw(camera_y, screen_height)
     -- Only draw if yeti is close enough to be visible
-    if self.distance < -400 then
+    if self.distance < -350 then
         return
     end
 
@@ -118,8 +118,11 @@ function Yeti:draw(camera_y, screen_height)
         return
     end
 
+    -- Center yeti horizontally on screen (180 = GAME_WIDTH / 2)
+    local screen_x = 180
+
     love.graphics.push()
-    love.graphics.translate(0, screen_y)
+    love.graphics.translate(screen_x, screen_y)
 
     -- Apply lunge effect
     local scale = 1.0
