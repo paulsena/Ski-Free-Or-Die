@@ -6,39 +6,39 @@ local Utils = require("src.lib.utils")
 
 local Obstacle = {}
 
--- Obstacle type definitions
+-- Obstacle type definitions (scaled for 360x480 resolution)
 Obstacle.TYPES = {
     small_tree = {
-        width = 12,
-        height = 16,
+        width = 18,
+        height = 24,
         collision_type = "slow",    -- Just slows down
         speed_penalty = 0.8,        -- 20% speed loss
         spawn_weight = 35           -- Spawn probability weight
     },
     large_tree = {
-        width = 18,
-        height = 26,
+        width = 28,
+        height = 40,
         collision_type = "deflect", -- Slows and deflects
         speed_penalty = 0.4,        -- 60% speed loss
         spawn_weight = 25
     },
     rock = {
-        width = 16,
-        height = 12,
+        width = 24,
+        height = 18,
         collision_type = "crash",   -- Full crash
         speed_penalty = 0,
         spawn_weight = 20
     },
     cabin = {
-        width = 28,
-        height = 24,
+        width = 42,
+        height = 36,
         collision_type = "crash",   -- Full crash
         speed_penalty = 0,
         spawn_weight = 10
     },
     snow_mound = {
-        width = 20,
-        height = 8,
+        width = 30,
+        height = 12,
         collision_type = "slow",
         speed_penalty = 0.9,        -- 10% speed loss
         spawn_weight = 10

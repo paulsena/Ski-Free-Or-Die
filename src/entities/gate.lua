@@ -6,7 +6,8 @@ local Utils = require("src.lib.utils")
 
 local Gate = {}
 
-Gate.WIDTH = 50          -- Default gate width
+-- Gate dimensions (scaled for 360x480 resolution)
+Gate.WIDTH = 75          -- Default gate width
 Gate.PENALTY = 3         -- Seconds added for missed gate
 
 function Gate.new(x, y, width, direction)
@@ -63,8 +64,8 @@ end
 
 function Gate:draw()
     local color
-    local pole_height = 20
-    local banner_height = 6
+    local pole_height = 30      -- Scaled for 360x480
+    local banner_height = 9     -- Scaled for 360x480
 
     -- Determine color based on state
     if self.state == "passed" then

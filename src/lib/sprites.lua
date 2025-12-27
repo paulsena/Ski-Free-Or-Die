@@ -862,29 +862,29 @@ function Sprites.clear_cache()
     sprite_cache = {}
 end
 
--- Pre-cache common sprites for better performance
+-- Pre-cache common sprites for better performance (scaled for 360x480 resolution)
 function Sprites.precache()
-    Sprites.get_cached("small_tree", 24, 32, function()
+    Sprites.get_cached("small_tree", 36, 48, function()
         Sprites.draw_small_tree(0, 0)
     end)
 
-    Sprites.get_cached("large_tree", 32, 48, function()
+    Sprites.get_cached("large_tree", 48, 72, function()
         Sprites.draw_large_tree(0, 0)
     end)
 
-    Sprites.get_cached("rock", 24, 20, function()
+    Sprites.get_cached("rock", 36, 30, function()
         Sprites.draw_rock(0, 0)
     end)
 
-    Sprites.get_cached("snow_mound", 28, 16, function()
+    Sprites.get_cached("snow_mound", 42, 24, function()
         Sprites.draw_snow_mound(0, 0)
     end)
 
-    Sprites.get_cached("cabin_pink", 40, 44, function()
+    Sprites.get_cached("cabin_pink", 60, 66, function()
         Sprites.draw_cabin_pink(0, 0)
     end)
 
-    Sprites.get_cached("cabin_blue", 40, 44, function()
+    Sprites.get_cached("cabin_blue", 60, 66, function()
         Sprites.draw_cabin_blue(0, 0)
     end)
 end

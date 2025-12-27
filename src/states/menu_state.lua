@@ -1,14 +1,15 @@
 -- src/states/menu_state.lua
 -- Main menu state with 80s retro aesthetic
 
-local Colors = require("src.colors")
 local StateManager = require("src.core.state_manager")
+local Colors = require("src.colors")
+local Config = require("src.core.config")
 local Music = require("src.lib.music")
 
 local MenuState = {}
 
-local GAME_WIDTH = 320
-local GAME_HEIGHT = 180
+local GAME_WIDTH = Config.GAME_WIDTH
+local GAME_HEIGHT = Config.GAME_HEIGHT
 
 -- Animation variables
 local title_wave = 0

@@ -118,6 +118,7 @@ The "80s Windbreaker" palette (defined in `src/colors.lua`):
 
 ## Display Settings
 
-- Native resolution: 320x180 (16:9 retro scale)
-- Scaled up 3x to 960x540 window
+- Native resolution: 360x480 (3:4 portrait ratio for vertical skiing view)
+- Scaled up 3x to 1080x1440 window (fits 1440p monitors perfectly)
 - Pixel-perfect rendering with nearest-neighbor filtering
+- Side letterboxing on 16:9 displays (can be used for UI)

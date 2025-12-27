@@ -27,13 +27,13 @@ Skier.POS_RIGHT = 5
 Skier.POS_FAR_RIGHT = 6
 Skier.POS_FULL_RIGHT = 7
 
--- Physics constants
-Skier.BASE_SPEED = 110             -- Base downhill speed (pixels/sec)
-Skier.MAX_SPEED = 250              -- Maximum speed
+-- Physics constants (scaled for 360x480 resolution)
+Skier.BASE_SPEED = 140             -- Base downhill speed (pixels/sec)
+Skier.MAX_SPEED = 320              -- Maximum speed
 Skier.TUCK_SPEED_BONUS = 0.12      -- 12% speed increase when tucking
 Skier.CRASH_DURATION = 1.0         -- Recovery time after crash
 Skier.IMMUNITY_DURATION = 1.0      -- Immunity time after crash recovery
-Skier.HITBOX_RADIUS = 5            -- Forgiving collision radius
+Skier.HITBOX_RADIUS = 8            -- Forgiving collision radius (scaled)
 Skier.DEFLECT_VX_FACTOR = 0.8      -- How much X velocity reverses on deflect
 
 -- Input timing

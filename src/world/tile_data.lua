@@ -28,10 +28,10 @@ TileData.SLOPE_MULTIPLIERS = {
     steep = 1.2
 }
 
--- Tile dimension constants
-TileData.TILE_HEIGHT = 300          -- Vertical length of each tile (roughly 3-5 seconds of skiing)
-TileData.TILE_WIDTH = 300           -- Width of skiable area
-TileData.TRANSITION_ZONE = 40       -- Safe zone at tile edges (no obstacles)
+-- Tile dimension constants (scaled for 360x480 resolution)
+TileData.TILE_HEIGHT = 400          -- Vertical length of each tile (roughly 3-5 seconds of skiing)
+TileData.TILE_WIDTH = 340           -- Width of skiable area (slightly less than screen width)
+TileData.TRANSITION_ZONE = 50       -- Safe zone at tile edges (no obstacles)
 
 -- Slalom variants
 TileData.SlalomVariant = {
@@ -152,11 +152,11 @@ TileData.TILE_TEMPLATES = {
     }
 }
 
--- Gate spacing constants
+-- Gate spacing constants (scaled for 360x480 resolution)
 TileData.GATE_SPACING = {
-    wide = 100,      -- Easy: lots of room
-    normal = 80,     -- Medium: moderate challenge
-    tight = 60       -- Hard: precision required
+    wide = 120,      -- Easy: lots of room
+    normal = 100,    -- Medium: moderate challenge
+    tight = 75       -- Hard: precision required
 }
 
 -- Create a new tile instance from a template

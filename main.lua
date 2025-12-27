@@ -4,10 +4,11 @@
 
 local StateManager = require("src.core.state_manager")
 local Colors = require("src.colors")
+local Config = require("src.core.config")
 
--- Game constants
-local GAME_WIDTH = 320
-local GAME_HEIGHT = 180
+-- Game constants (loaded from Config)
+local GAME_WIDTH = Config.GAME_WIDTH
+local GAME_HEIGHT = Config.GAME_HEIGHT
 
 -- Canvas for pixel-perfect rendering
 local canvas
