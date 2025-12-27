@@ -9,6 +9,7 @@ Colors.ELECTRIC_BLUE = {0, 1, 1, 1}            -- #00FFFF
 Colors.BRIGHT_YELLOW = {1, 0.843, 0, 1}        -- #FFD700
 Colors.MINT_GREEN = {0, 1, 0.498, 1}           -- #00FF7F
 Colors.SNOW_WHITE = {1, 0.98, 0.98, 1}         -- #FFFAFA
+Colors.BLACK = {0, 0, 0, 1}                    -- #000000
 
 -- Secondary Palette
 Colors.DEEP_PURPLE = {0.58, 0, 0.827, 1}       -- #9400D3

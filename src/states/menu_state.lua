@@ -15,7 +15,7 @@ local GAME_HEIGHT = Config.GAME_HEIGHT
 local title_wave = 0
 local snow_particles = {}
 local menu_selection = 1
-local menu_options = {"Start Game", "Endless Mode", "Quit"}
+local menu_options = {"Time Trial", "Endless Mode", "Quit"}
 
 function MenuState:enter()
     menu_selection = 1
@@ -124,7 +124,7 @@ function MenuState:draw()
             love.graphics.print(">", 100, y)
             love.graphics.print("<", 215, y)
         else
-            Colors.set(Colors.SNOW_WHITE)
+            Colors.set(Colors.BLACK)
         end
         love.graphics.printf(option, 0, y, GAME_WIDTH, "center")
     end
