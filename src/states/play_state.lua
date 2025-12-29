@@ -9,6 +9,7 @@ local WorldManager = require("src.world.world_manager")
 local Yeti = require("src.entities.yeti")
 local Config = require("src.core.config")
 local Music = require("src.lib.music")
+local SFX = require("src.lib.sfx")
 local Particles = require("src.systems.particles")
 local Collision = require("src.systems.collision")
 
@@ -58,11 +59,19 @@ function PlayState:enter(params)
     self.camera:set_target(self.skier.x, self.skier.y)
     self.camera:snap()
 
+    -- Initialize audio
+    SFX.load()
+
     -- Play gameplay music
     Music.play("gameplay")
+
+    -- Start ski loop sound
+    SFX.play("ski_loop")
 end
 
 function PlayState:exit()
+    -- Stop all sound effects
+    SFX.stop_all()
 end
 
 function PlayState:update(dt)
@@ -79,6 +88,15 @@ function PlayState:update(dt)
     -- Handle input and update skier
     self.skier:handle_input(dt)
     self.skier:update(dt, self.world:get_slope_bounds())
+
+    -- Manage ski loop sound based on crash state
+    if self.skier.is_crashed then
+        SFX.stop("ski_loop")
+    elseif not self.skier.is_crashed then
+        -- Resume ski loop if not playing (e.g., after crash recovery)
+        -- Note: SFX.play on looping sound is idempotent (won't restart if playing)
+        SFX.play("ski_loop")
+    end
 
     -- Update camera
     self.camera:set_target(self.skier.x, self.skier.y)
@@ -142,12 +160,14 @@ function PlayState:check_collisions()
     if hit_obstacle then
         Collision.resolve_obstacle_collision(self.skier, hit_obstacle, self.camera)
 
-        -- Emit particles based on collision type
+        -- Emit particles and play sounds based on collision type
         if hit_obstacle.collision_type == "crash" then
             self.particles:emit_crash(self.skier.x, self.skier.y)
+            SFX.play("crash")
         else
-            -- Minor impact particles
+            -- Minor impact particles and sound
             self.particles:emit(self.skier.x, self.skier.y, "impact_snow", 5)
+            SFX.play("tree_hit")
         end
     end
 end
@@ -162,18 +182,22 @@ function PlayState:check_gates()
     self.gates_passed = self.gates_passed + passed
     self.gates_missed = self.gates_missed + missed
 
-    -- Emit gate particles
+    -- Emit gate particles and play sounds
     if passed > 0 then
         self.particles:emit_gate_pass(self.skier.x, self.skier.y, true)
+        SFX.play("gate_pass")
     end
     if missed > 0 then
         self.particles:emit_gate_pass(self.skier.x, self.skier.y, false)
+        SFX.play("gate_miss")
     end
 end
 
 function PlayState:game_over(reason)
     self.is_finished = true
     self.game_over_reason = reason
+    -- Stop ski loop sound
+    SFX.stop("ski_loop")
     -- Play game over music
     Music.play("gameover")
 end
