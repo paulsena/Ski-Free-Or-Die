@@ -239,7 +239,7 @@ function TileGenerator:populate_tile(tile)
 
     -- Generate obstacles
     if tile.obstacle_density and tile.obstacle_density > 0 then
-        local num_obstacles = math.floor(tile.obstacle_density * 8)  -- 0-8 obstacles per tile
+        local num_obstacles = math.floor(tile.obstacle_density * 10)  -- 0-10 obstacles per tile
 
         for i = 1, num_obstacles do
             local x = self.rng:random_float(-half_width * 0.9, half_width * 0.9)
