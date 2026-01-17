@@ -256,7 +256,6 @@ end
 function Skier:draw()
     love.graphics.push()
     love.graphics.translate(self.x, self.y)
-    love.graphics.rotate(Utils.deg_to_rad(-self:get_angle()))
 
     -- Flash effect during immunity (blink on/off rapidly)
     local visible = true
@@ -266,8 +265,18 @@ function Skier:draw()
 
     if visible then
         if self.is_crashed then
+            love.graphics.rotate(Utils.deg_to_rad(-self:get_angle()))
             self:draw_crashed()
+        elseif self.position == Skier.POS_FULL_LEFT then
+            -- SPRITE SWAP POINT: Replace draw_side_view with sprite for "stop_left"
+            self:draw_side_view("left")
+        elseif self.position == Skier.POS_FULL_RIGHT then
+            -- SPRITE SWAP POINT: Replace draw_side_view with sprite for "stop_right"
+            self:draw_side_view("right")
         else
+            -- SPRITE SWAP POINT: Replace draw_normal with directional sprites
+            -- Use self.position (1-7) or self:get_angle() to select sprite
+            love.graphics.rotate(Utils.deg_to_rad(-self:get_angle()))
             self:draw_normal()
         end
     end
@@ -275,7 +284,72 @@ function Skier:draw()
     love.graphics.pop()
 end
 
+-- SPRITE SWAP POINT: This entire function can be replaced with sprite rendering
+-- When swapping to sprites, load "stop_left" and "stop_right" sprites and draw them
+-- at the skier's position based on the direction parameter
+function Skier:draw_side_view(direction)
+    -- direction: "left" or "right"
+    -- Draws skier in profile view facing sideways with horizontal skis
+    local facing = direction == "left" and -1 or 1
+
+    -- Shadow (wide for sideways stance)
+    love.graphics.setColor(0, 0, 0, 0.2)
+    love.graphics.ellipse("fill", 0, 10, 12, 4)
+
+    -- SKIS - horizontal, pointing sideways (perpendicular to slope)
+    Colors.set(Colors.ELECTRIC_BLUE)
+    -- Both skis side by side, horizontal
+    love.graphics.rectangle("fill", -12, 6, 24, 3, 1, 1)   -- Back ski
+    love.graphics.rectangle("fill", -11, 9, 22, 3, 1, 1)   -- Front ski
+
+    -- Legs - side view, bent in ski stance
+    Colors.set(Colors.HOT_PINK)
+    love.graphics.rectangle("fill", -2, 0, 5, 8, 1, 1)
+
+    -- Body/torso - facing left or right
+    Colors.set(Colors.HOT_PINK)
+    love.graphics.rectangle("fill", facing * 1 - 3, -10, 6, 11, 2, 2)
+
+    -- Jacket stripe (shows direction clearly)
+    love.graphics.setColor(1, 0.3, 0.7)
+    love.graphics.rectangle("fill", facing * 2, -9, 2, 8, 1, 1)
+
+    -- Arm - extended in direction skier is facing
+    love.graphics.setColor(1, 0.85, 0.7)  -- Skin
+    love.graphics.circle("fill", facing * 6, -5, 2.5)
+
+    -- Head - offset in facing direction to show orientation
+    love.graphics.setColor(1, 0.85, 0.7)
+    love.graphics.circle("fill", facing * 3, -14, 4)
+
+    -- Face direction indicator - nose bump
+    love.graphics.circle("fill", facing * 6, -14, 1.5)
+
+    -- Goggles - on the side of face we can see
+    Colors.set(Colors.ELECTRIC_BLUE)
+    love.graphics.ellipse("fill", facing * 4.5, -15, 2.5, 1.5)
+
+    -- Helmet
+    Colors.set(Colors.BRIGHT_YELLOW)
+    love.graphics.arc("fill", facing * 3, -14, 5, math.pi, 0)
+
+    -- Pole - held out in facing direction
+    love.graphics.setColor(0.6, 0.6, 0.65)
+    love.graphics.line(facing * 6, -5, facing * 14, 6)
+    -- Pole basket
+    love.graphics.circle("line", facing * 14, 6, 2)
+
+    -- Snow spray on the downhill side of skis
+    love.graphics.setColor(1, 1, 1, 0.7)
+    love.graphics.ellipse("fill", 0, 13, 8, 2)
+    love.graphics.setColor(1, 1, 1, 0.4)
+    love.graphics.ellipse("fill", -facing * 4, 12, 5, 1.5)
+end
+
 function Skier:draw_normal()
+    -- SPRITE SWAP POINT: Replace this function body with sprite rendering
+    -- Use self.position or self:get_angle() to select the appropriate directional sprite
+
     -- Shadow
     love.graphics.setColor(0, 0, 0, 0.2)
     love.graphics.ellipse("fill", 2, 8, 6, 3)
@@ -312,9 +386,18 @@ function Skier:draw_normal()
     Colors.set(Colors.BRIGHT_YELLOW)
     love.graphics.arc("fill", 0, -12, 4, math.pi, 0)
 
-    -- Poles (when not tucking)
-    if not self.is_tucking then
-        love.graphics.setColor(0.6, 0.6, 0.65)
+    -- Poles
+    love.graphics.setColor(0.6, 0.6, 0.65)
+    if self.is_tucking then
+        -- SPRITE SWAP POINT: Replace with tuck sprite showing poles up
+        -- Tucked position - poles tucked under arms, pointing diagonally up and back
+        love.graphics.line(-3, -6, -10, -16)
+        love.graphics.line(3, -6, 10, -16)
+        -- Pole baskets (small circles at the end)
+        love.graphics.circle("line", -10, -16, 1.5)
+        love.graphics.circle("line", 10, -16, 1.5)
+    else
+        -- Normal stance - poles down at sides
         love.graphics.line(-5, -4, -8, 8)
         love.graphics.line(5, -4, 8, 8)
     end
