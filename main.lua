@@ -35,9 +35,17 @@ function love.load(args)
     -- Load and register states
     local PlayState = require("src.states.play_state")
     local MenuState = require("src.states.menu_state")
+    local HighScoresState = require("src.states.highscores_state")
+    local NameEntryState = require("src.states.name_entry_state")
 
     StateManager.register("menu", MenuState)
     StateManager.register("play", PlayState)
+    StateManager.register("highscores", HighScoresState)
+    StateManager.register("name_entry", NameEntryState)
+
+    -- Initialize leaderboard system
+    local Leaderboard = require("src.core.leaderboard")
+    Leaderboard.init()
 
     -- Start in menu state
     StateManager.switch("menu")

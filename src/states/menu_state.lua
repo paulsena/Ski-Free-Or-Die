@@ -21,7 +21,7 @@ local hint_font = nil
 -- Animation variables
 local snow_particles = {}
 local menu_selection = 1
-local menu_options = {"Time Trial", "Endless Mode", "Quit"}
+local menu_options = {"Time Trial", "Endless Mode", "High Scores", "Quit"}
 
 function MenuState:enter()
     menu_selection = 1
@@ -170,6 +170,9 @@ function MenuState:select_option()
         -- Endless Mode
         StateManager.switch("play", {mode = "endless"})
     elseif menu_selection == 3 then
+        -- High Scores
+        StateManager.switch("highscores")
+    elseif menu_selection == 4 then
         -- Quit
         love.event.quit()
     end

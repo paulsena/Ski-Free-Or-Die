@@ -100,4 +100,60 @@ function Utils.deep_copy(orig)
     return copy
 end
 
+-- Simple table serialization (Lua table to string)
+function Utils.serialize(tbl, indent)
+    indent = indent or 0
+    local indent_str = string.rep("  ", indent)
+    local result = "{\n"
+
+    for k, v in pairs(tbl) do
+        local key_str
+        if type(k) == "string" then
+            key_str = string.format('["%s"]', k)
+        else
+            key_str = string.format("[%s]", tostring(k))
+        end
+
+        local val_str
+        if type(v) == "table" then
+            val_str = Utils.serialize(v, indent + 1)
+        elseif type(v) == "string" then
+            val_str = string.format('"%s"', v:gsub('"', '\\"'))
+        elseif type(v) == "number" or type(v) == "boolean" then
+            val_str = tostring(v)
+        else
+            val_str = "nil"
+        end
+
+        result = result .. indent_str .. "  " .. key_str .. " = " .. val_str .. ",\n"
+    end
+
+    result = result .. indent_str .. "}"
+    return result
+end
+
+-- Deserialize a string back to a table
+function Utils.deserialize(str)
+    if not str or str == "" then
+        return nil
+    end
+
+    -- Use load (Lua 5.2+) or loadstring (Lua 5.1)
+    local load_func = load or loadstring
+    local func, err = load_func("return " .. str)
+
+    if not func then
+        print("Deserialization error: " .. tostring(err))
+        return nil
+    end
+
+    local success, result = pcall(func)
+    if not success then
+        print("Deserialization execution error: " .. tostring(result))
+        return nil
+    end
+
+    return result
+end
+
 return Utils

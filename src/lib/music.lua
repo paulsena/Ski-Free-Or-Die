@@ -702,6 +702,220 @@ local function generate_gameover_theme()
     return samples_to_sound_data(samples)
 end
 
+-- Generate awards ceremony theme - triumphant, Olympic-style fanfare with SNES/C64 vibes
+local function generate_awards_theme()
+    local bpm = 120
+    local beat_duration = 60 / bpm
+    local bar_duration = beat_duration * 4
+    local loop_bars = 8
+
+    local total_samples = math.floor(loop_bars * bar_duration * SAMPLE_RATE)
+
+    -- Initialize channels
+    local trumpet_samples = {}
+    local brass_samples = {}
+    local strings_samples = {}
+    local bass_samples = {}
+    local drums_samples = {}
+
+    for i = 1, total_samples do
+        trumpet_samples[i] = 0
+        brass_samples[i] = 0
+        strings_samples[i] = 0
+        bass_samples[i] = 0
+        drums_samples[i] = 0
+    end
+
+    reset_noise()
+
+    -- Triumphant chord progression (C major - F major - G major - C major)
+    local chords = {
+        {NOTES.C4, NOTES.E4, NOTES.G4},  -- C major
+        {NOTES.C4, NOTES.E4, NOTES.G4},  -- C major
+        {NOTES.F3, NOTES.A3, NOTES.C4},  -- F major
+        {NOTES.F3, NOTES.A3, NOTES.C4},  -- F major
+        {NOTES.G3, NOTES.B3, NOTES.D4},  -- G major
+        {NOTES.G3, NOTES.B3, NOTES.D4},  -- G major
+        {NOTES.C4, NOTES.E4, NOTES.G4},  -- C major
+        {NOTES.C4, NOTES.E4, NOTES.G4},  -- C major (resolution)
+    }
+
+    -- Bass line - root notes
+    local bass_notes = {
+        NOTES.C3, NOTES.C3, NOTES.F2, NOTES.F2,
+        NOTES.G2, NOTES.G2, NOTES.C3, NOTES.C3
+    }
+
+    -- Olympic-style fanfare melody (inspired by awards ceremonies)
+    local melody = {
+        -- Bar 1-2: Fanfare opening
+        {NOTES.C5, 0.75}, {NOTES.E5, 0.25}, {NOTES.G5, 1.0}, {NOTES.E5, 0.5}, {NOTES.G5, 0.5}, {NOTES.C6, 1.0},
+        {NOTES.G5, 0.5}, {NOTES.E5, 0.5}, {NOTES.C5, 0.5}, {NOTES.E5, 0.5}, {NOTES.G5, 1.0}, {NOTES.REST, 0.5}, {NOTES.G5, 0.5},
+        -- Bar 3-4: Response
+        {NOTES.F5, 0.75}, {NOTES.A5, 0.25}, {NOTES.C6, 1.0}, {NOTES.A5, 0.5}, {NOTES.F5, 0.5}, {NOTES.A5, 1.0},
+        {NOTES.G5, 0.5}, {NOTES.F5, 0.5}, {NOTES.E5, 0.5}, {NOTES.D5, 0.5}, {NOTES.C5, 1.0}, {NOTES.REST, 1.0},
+        -- Bar 5-6: Build up
+        {NOTES.G5, 0.5}, {NOTES.A5, 0.5}, {NOTES.B5, 0.5}, {NOTES.C6, 0.5}, {NOTES.D6, 1.0}, {NOTES.B5, 0.5}, {NOTES.G5, 0.5},
+        {NOTES.D6, 0.5}, {NOTES.C6, 0.5}, {NOTES.B5, 0.5}, {NOTES.A5, 0.5}, {NOTES.G5, 1.5}, {NOTES.REST, 0.5},
+        -- Bar 7-8: Triumphant finale
+        {NOTES.E5, 0.5}, {NOTES.G5, 0.5}, {NOTES.C6, 1.0}, {NOTES.E6, 1.0}, {NOTES.C6, 0.5}, {NOTES.G5, 0.5},
+        {NOTES.C6, 2.0}, {NOTES.REST, 2.0}
+    }
+
+    -- Generate bass
+    for bar = 0, loop_bars - 1 do
+        local bar_start = bar * bar_duration
+        local bass_note = bass_notes[bar + 1]
+
+        -- Whole notes for bass
+        local note_start = math.floor(bar_start * SAMPLE_RATE)
+        local note = generate_note(bass_note, bar_duration * 0.9, SAMPLE_RATE, sine_wave, lead_envelope, 0.4)
+
+        for j, s in ipairs(note) do
+            local idx = note_start + j
+            if idx >= 1 and idx <= total_samples then
+                bass_samples[idx] = bass_samples[idx] + s
+            end
+        end
+    end
+
+    -- Generate string pads (sustained chords)
+    for bar = 0, loop_bars - 1 do
+        local bar_start = bar * bar_duration
+        local chord = chords[bar + 1]
+
+        for _, freq in ipairs(chord) do
+            local note_start = math.floor(bar_start * SAMPLE_RATE)
+            local note = generate_note(freq, bar_duration * 0.95, SAMPLE_RATE, triangle_wave, lead_envelope, 0.2)
+
+            for j, s in ipairs(note) do
+                local idx = note_start + j
+                if idx >= 1 and idx <= total_samples then
+                    strings_samples[idx] = strings_samples[idx] + s
+                end
+            end
+        end
+    end
+
+    -- Generate brass stabs (punchier chords on beats)
+    for bar = 0, loop_bars - 1 do
+        local bar_start = bar * bar_duration
+        local chord = chords[bar + 1]
+
+        -- Brass hits on beats 1 and 3
+        for beat = 0, 1 do
+            local beat_start = bar_start + beat * 2 * beat_duration
+            for _, freq in ipairs(chord) do
+                local note_start = math.floor(beat_start * SAMPLE_RATE)
+                local note = generate_note(freq * 2, beat_duration * 0.9, SAMPLE_RATE, pulse_wave, stab_envelope, 0.25, {width = 0.3})
+
+                for j, s in ipairs(note) do
+                    local idx = note_start + j
+                    if idx >= 1 and idx <= total_samples then
+                        brass_samples[idx] = brass_samples[idx] + s
+                    end
+                end
+            end
+        end
+    end
+
+    -- Generate triumphant trumpet melody
+    local melody_time = 0
+    for _, note_data in ipairs(melody) do
+        local freq = note_data[1]
+        local duration = note_data[2] * beat_duration
+        local note_start = math.floor(melody_time * SAMPLE_RATE)
+
+        if freq > 0 then
+            -- Use sawtooth for trumpet-like brightness
+            local note = generate_note(freq, duration * 0.9, SAMPLE_RATE, sawtooth_wave, lead_envelope, 0.35)
+
+            for j, s in ipairs(note) do
+                local idx = note_start + j
+                if idx >= 1 and idx <= total_samples then
+                    trumpet_samples[idx] = trumpet_samples[idx] + s
+                end
+            end
+        end
+
+        melody_time = melody_time + duration
+    end
+
+    -- Generate ceremonial drums
+    for bar = 0, loop_bars - 1 do
+        local bar_start = bar * bar_duration
+
+        for beat = 0, 3 do
+            local beat_start = bar_start + beat * beat_duration
+
+            -- Snare on beats 2 and 4
+            if beat == 1 or beat == 3 then
+                local snare_start = math.floor(beat_start * SAMPLE_RATE)
+                local snare_len = math.floor(beat_duration * 0.15 * SAMPLE_RATE)
+
+                reset_noise()
+                for j = 1, snare_len do
+                    local t = (j - 1) / SAMPLE_RATE
+                    local env = punchy_envelope(t, beat_duration * 0.15)
+                    local body = sine_wave(220 * t) * 0.3
+                    local noise = noise_wave() * 0.7
+                    local idx = snare_start + j
+                    if idx >= 1 and idx <= total_samples then
+                        drums_samples[idx] = drums_samples[idx] + (body + noise) * env * 0.3
+                    end
+                end
+            end
+
+            -- Kick on beat 1
+            if beat == 0 then
+                local kick_start = math.floor(beat_start * SAMPLE_RATE)
+                local kick_len = math.floor(beat_duration * 0.2 * SAMPLE_RATE)
+
+                for j = 1, kick_len do
+                    local t = (j - 1) / SAMPLE_RATE
+                    local freq = 90 * math.exp(-t * 35) + 45
+                    local phase = freq * t
+                    local env = punchy_envelope(t, beat_duration * 0.2)
+                    local idx = kick_start + j
+                    if idx >= 1 and idx <= total_samples then
+                        drums_samples[idx] = drums_samples[idx] + sine_wave(phase) * env * 0.4
+                    end
+                end
+            end
+
+            -- Cymbal crashes on important moments (bar 1, 5, 7)
+            if beat == 0 and (bar == 0 or bar == 4 or bar == 6) then
+                local cymbal_start = math.floor(beat_start * SAMPLE_RATE)
+                local cymbal_len = math.floor(beat_duration * 2 * SAMPLE_RATE)
+
+                reset_noise()
+                for j = 1, cymbal_len do
+                    local t = (j - 1) / SAMPLE_RATE
+                    local env = math.exp(-t * 2)
+                    local idx = cymbal_start + j
+                    if idx >= 1 and idx <= total_samples then
+                        drums_samples[idx] = drums_samples[idx] + noise_wave() * env * 0.2
+                    end
+                end
+            end
+        end
+    end
+
+    -- Mix all channels
+    local mixed = {}
+    for i = 1, total_samples do
+        mixed[i] = trumpet_samples[i] + brass_samples[i] + strings_samples[i] + bass_samples[i] + drums_samples[i]
+    end
+
+    -- Add subtle reverb for grandeur
+    mixed = add_delay(mixed, 0.18, 0.3, 0.25)
+
+    -- Normalize
+    normalize_samples(mixed, 0.85)
+
+    return samples_to_sound_data(mixed)
+end
+
 --------------------------------------------------------------------------------
 -- Track cache
 --------------------------------------------------------------------------------
@@ -721,6 +935,8 @@ local function get_or_generate_track(name)
         sound_data = generate_gameplay_theme()
     elseif name == "gameover" then
         sound_data = generate_gameover_theme()
+    elseif name == "awards" then
+        sound_data = generate_awards_theme()
     else
         return nil
     end
@@ -861,7 +1077,7 @@ function Music.preload_all()
         Music.load()
     end
 
-    local tracks = {"menu", "gameplay", "gameover"}
+    local tracks = {"menu", "gameplay", "gameover", "awards"}
     for _, track in ipairs(tracks) do
         pcall(function()
             get_or_generate_track(track)
