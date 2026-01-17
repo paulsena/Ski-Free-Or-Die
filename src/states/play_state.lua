@@ -287,7 +287,9 @@ function PlayState:draw_hud()
     else
         Colors.set(Colors.SNOW_WHITE)
     end
-    love.graphics.print(string.format("%.0f", self.skier.speed), GAME_WIDTH - 40, 2)
+    -- Convert pixels/sec to mph (0.2 mph per px/s)
+    local speed_mph = self.skier.speed * 0.2
+    love.graphics.print(string.format("%.0f mph", speed_mph), GAME_WIDTH - 50, 2)
 
     -- Gates passed
     Colors.set(Colors.MINT_GREEN)
