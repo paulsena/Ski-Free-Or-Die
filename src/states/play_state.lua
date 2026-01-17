@@ -85,7 +85,9 @@ function PlayState:update(dt)
     self.prev_skier_y = self.skier.y
 
     -- Handle input and update skier
-    self.skier:handle_input(dt)
+    -- Pass skier's screen X position (center of game width) for mouse control
+    local skier_screen_x = GAME_WIDTH / 2
+    self.skier:handle_input(dt, skier_screen_x)
     self.skier:update(dt, self.world:get_slope_bounds())
 
     -- Update camera
@@ -113,8 +115,8 @@ function PlayState:update(dt)
     self.particles:update(dt)
 
     -- Emit snow spray particles while skiing
-    local is_turning = love.keyboard.isDown("left") or love.keyboard.isDown("right") or
-                       love.keyboard.isDown("a") or love.keyboard.isDown("d")
+    -- Check if turning based on skier position (not center = turning)
+    local is_turning = self.skier.position ~= Skier.POS_CENTER
     if not self.skier.is_crashed then
         self.particles:emit_snow_spray(
             self.skier.x,

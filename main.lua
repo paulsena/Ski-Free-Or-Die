@@ -113,11 +113,13 @@ end
 
 function love.keypressed(key)
     if key == "escape" then
-        if StateManager.get_current_name() == "play" then
-            StateManager.switch("menu")
-        else
+        local current_state = StateManager.get_current_name()
+        if current_state == "menu" then
             love.event.quit()
+        elseif current_state == "play" then
+            StateManager.switch("menu")
         end
+        -- Other states (highscores, name_entry) handle their own escape behavior
     end
     StateManager.keypressed(key)
 end
@@ -133,4 +135,23 @@ end
 -- Expose game dimensions for other modules
 function love.getGameDimensions()
     return GAME_WIDTH, GAME_HEIGHT
+end
+
+-- Convert window mouse coordinates to game coordinates (accounting for letterboxing/scaling)
+function love.getGameMousePosition()
+    local mx, my = love.mouse.getPosition()
+
+    -- Calculate scale and offset (same as in draw)
+    local scale_x = love.graphics.getWidth() / GAME_WIDTH
+    local scale_y = love.graphics.getHeight() / GAME_HEIGHT
+    local scale = math.min(scale_x, scale_y)
+
+    local offset_x = (love.graphics.getWidth() - GAME_WIDTH * scale) / 2
+    local offset_y = (love.graphics.getHeight() - GAME_HEIGHT * scale) / 2
+
+    -- Convert to game coordinates
+    local game_x = (mx - offset_x) / scale
+    local game_y = (my - offset_y) / scale
+
+    return game_x, game_y
 end

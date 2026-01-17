@@ -36,9 +36,11 @@ Skier.IMMUNITY_DURATION = 1.0      -- Immunity time after crash recovery
 Skier.HITBOX_RADIUS = 8            -- Forgiving collision radius (scaled)
 Skier.DEFLECT_VX_FACTOR = 0.8      -- How much X velocity reverses on deflect
 
--- Input timing
-Skier.KEY_REPEAT_DELAY = 0.15      -- Delay before key repeat starts
-Skier.KEY_REPEAT_RATE = 0.08       -- Time between position changes when holding
+-- Mouse control settings (zone thresholds in pixels from center)
+Skier.ZONE_CENTER = 60             -- 0-60px = straight (position 4)
+Skier.ZONE_GENTLE = 100            -- 61-100px = gentle turn (position 3/5)
+Skier.ZONE_SHARP = 140             -- 101-140px = sharp turn (position 2/6)
+                                   -- 141px+ = full brake turn (position 1/7)
 
 function Skier.new(x, y)
     local self = {
@@ -53,11 +55,6 @@ function Skier.new(x, y)
         crash_timer = 0,
         is_immune = false,
         immunity_timer = 0,
-        -- Input state for key repeat
-        left_held = false,
-        right_held = false,
-        key_timer = 0,
-        key_repeat_started = false,
         -- Animation state
         anim_timer = 0,
         ski_spread = 1
@@ -73,69 +70,42 @@ function Skier:get_angle()
     return self:get_position_data().angle
 end
 
-function Skier:handle_input(dt)
+function Skier:handle_input(dt, skier_screen_x)
     if self.is_crashed then
         return
     end
 
-    local left_down = love.keyboard.isDown("left") or love.keyboard.isDown("a")
-    local right_down = love.keyboard.isDown("right") or love.keyboard.isDown("d")
-
-    -- Tuck state
-    self.is_tucking = love.keyboard.isDown("down") or
+    -- Tuck state - mouse button or keyboard
+    self.is_tucking = love.mouse.isDown(1) or love.mouse.isDown(2) or
+                      love.keyboard.isDown("down") or
                       love.keyboard.isDown("s") or
                       love.keyboard.isDown("lshift") or
                       love.keyboard.isDown("rshift")
 
-    -- Handle left key
-    if left_down and not self.left_held then
-        -- Key just pressed - move one position
-        self:move_position(-1)
-        self.left_held = true
-        self.key_timer = 0
-        self.key_repeat_started = false
-    elseif left_down and self.left_held then
-        -- Key held - handle repeat
-        self.key_timer = self.key_timer + dt
-        if not self.key_repeat_started then
-            if self.key_timer >= Skier.KEY_REPEAT_DELAY then
-                self.key_repeat_started = true
-                self.key_timer = 0
-            end
-        else
-            if self.key_timer >= Skier.KEY_REPEAT_RATE then
-                self:move_position(-1)
-                self.key_timer = 0
-            end
-        end
-    elseif not left_down then
-        self.left_held = false
+    -- Get mouse position in game coordinates
+    local mouse_x, _ = love.getGameMousePosition()
+
+    -- Calculate offset from skier's screen position
+    local offset = mouse_x - skier_screen_x
+    local abs_offset = math.abs(offset)
+
+    -- Map offset to position using explicit zone thresholds
+    local new_position
+    if abs_offset <= Skier.ZONE_CENTER then
+        -- Center zone - go straight
+        new_position = Skier.POS_CENTER
+    elseif abs_offset <= Skier.ZONE_GENTLE then
+        -- Gentle turn zone
+        new_position = offset > 0 and Skier.POS_RIGHT or Skier.POS_LEFT
+    elseif abs_offset <= Skier.ZONE_SHARP then
+        -- Sharp turn zone
+        new_position = offset > 0 and Skier.POS_FAR_RIGHT or Skier.POS_FAR_LEFT
+    else
+        -- Full brake turn zone
+        new_position = offset > 0 and Skier.POS_FULL_RIGHT or Skier.POS_FULL_LEFT
     end
 
-    -- Handle right key
-    if right_down and not self.right_held then
-        -- Key just pressed - move one position
-        self:move_position(1)
-        self.right_held = true
-        self.key_timer = 0
-        self.key_repeat_started = false
-    elseif right_down and self.right_held then
-        -- Key held - handle repeat
-        self.key_timer = self.key_timer + dt
-        if not self.key_repeat_started then
-            if self.key_timer >= Skier.KEY_REPEAT_DELAY then
-                self.key_repeat_started = true
-                self.key_timer = 0
-            end
-        else
-            if self.key_timer >= Skier.KEY_REPEAT_RATE then
-                self:move_position(1)
-                self.key_timer = 0
-            end
-        end
-    elseif not right_down then
-        self.right_held = false
-    end
+    self.position = new_position
 end
 
 function Skier:move_position(delta)

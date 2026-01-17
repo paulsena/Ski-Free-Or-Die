@@ -12,7 +12,7 @@ local CHANNELS = 1
 -- Music state
 local current_source = nil
 local current_track = nil
-local master_volume = 0.7
+local master_volume = 0.4
 local is_initialized = false
 
 -- Note frequencies (A4 = 440Hz tuning)

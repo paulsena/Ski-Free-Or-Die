@@ -14,7 +14,7 @@ local sfx_cache = {}
 local is_initialized = false
 
 -- Master volume for SFX
-local master_volume = 0.6
+local master_volume = 0.5
 
 --------------------------------------------------------------------------------
 -- Waveform generators (copied from music.lua for self-contained module)

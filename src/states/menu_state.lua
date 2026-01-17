@@ -131,12 +131,12 @@ function MenuState:draw()
     for ox = -1, 1 do
         for oy = -1, 1 do
             if ox ~= 0 or oy ~= 0 then
-                love.graphics.printf("Arrows: Steer | Down: Tuck | M: Mute", ox, hint_y + oy, GAME_WIDTH, "center")
+                love.graphics.printf("Mouse: Steer | Click: Tuck | M: Mute", ox, hint_y + oy, GAME_WIDTH, "center")
             end
         end
     end
     love.graphics.setColor(0.9, 0.9, 1, 1)
-    love.graphics.printf("Arrows: Steer | Down: Tuck | M: Mute", 0, hint_y, GAME_WIDTH, "center")
+    love.graphics.printf("Mouse: Steer | Click: Tuck | M: Mute", 0, hint_y, GAME_WIDTH, "center")
 end
 
 function MenuState:keypressed(key)
