@@ -20,6 +20,9 @@ local PlayState = {}
 local GAME_WIDTH = Config.GAME_WIDTH
 local GAME_HEIGHT = Config.GAME_HEIGHT
 
+-- Collision detection radius for nearby obstacle checks
+local COLLISION_CHECK_RADIUS = 50
+
 function PlayState:enter(params)
     self.mode = params and params.mode or "trial"
 
@@ -145,7 +148,7 @@ function PlayState:check_collisions()
     local nearby = Collision.get_nearby_obstacles(
         self.skier,
         self.world:get_obstacles(),
-        50
+        COLLISION_CHECK_RADIUS
     )
 
     local hit_obstacle = Collision.check_skier_obstacles(self.skier, nearby)

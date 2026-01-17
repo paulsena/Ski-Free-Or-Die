@@ -12,6 +12,9 @@ local Skier = require("src.entities.skier")
 local GAME_WIDTH = Config.GAME_WIDTH
 local GAME_HEIGHT = Config.GAME_HEIGHT
 
+-- Speed display conversion (roughly: 1 mph ≈ 5.9 pixels/sec at this scale)
+local PIXELS_PER_SEC_TO_MPH = 0.17
+
 -- Canvas for pixel-perfect rendering
 local canvas
 
@@ -93,7 +96,7 @@ function love.draw()
         local raw_speed = state.skier and state.skier.speed or 0
         local hud_state = {
             elapsed_time = state.elapsed_time or 0,
-            speed_mph = raw_speed * 0.17,  -- Convert pixels/sec to mph
+            speed_mph = raw_speed * PIXELS_PER_SEC_TO_MPH,
             speed_ratio = raw_speed / Skier.MAX_SPEED,
             gates_passed = state.gates_passed or 0,
             gates_missed = state.gates_missed or 0,

@@ -1,10 +1,18 @@
 -- src/systems/particles.lua
 -- Simple particle system for visual effects
+--
+-- NOTE: This module intentionally uses non-seeded math.random() for all particle
+-- generation. Particles are purely cosmetic visual effects and do not affect
+-- gameplay state, collision, scoring, or deterministic replay. Using non-seeded
+-- RNG provides natural visual variety without impacting game reproducibility.
 
 local Colors = require("src.colors")
 local Utils = require("src.lib.utils")
 
 local Particles = {}
+
+-- Minimum speed required to emit snow spray particles
+local MIN_SPEED_FOR_SNOW_SPRAY = 30
 
 -- Particle types
 Particles.TYPES = {
@@ -89,7 +97,7 @@ function Particles:emit(x, y, particle_type, count, direction_min, direction_max
 end
 
 function Particles:emit_snow_spray(x, y, skier_angle, skier_speed, is_turning)
-    if skier_speed < 30 then
+    if skier_speed < MIN_SPEED_FOR_SNOW_SPRAY then
         return
     end
 

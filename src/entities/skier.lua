@@ -42,6 +42,9 @@ Skier.ZONE_GENTLE = 100            -- 61-100px = gentle turn (position 3/5)
 Skier.ZONE_SHARP = 140             -- 101-140px = sharp turn (position 2/6)
                                    -- 141px+ = full brake turn (position 1/7)
 
+-- Speed interpolation factor for smooth acceleration/deceleration
+Skier.SPEED_LERP_FACTOR = 4
+
 function Skier.new(x, y)
     local self = {
         x = x or 0,
@@ -149,7 +152,7 @@ function Skier:update(dt, slope_bounds)
     end
 
     -- Accelerate/decelerate towards target speed
-    self.speed = Utils.lerp(self.speed, target_speed, dt * 4)
+    self.speed = Utils.lerp(self.speed, target_speed, dt * Skier.SPEED_LERP_FACTOR)
     self.speed = Utils.clamp(self.speed, 0, Skier.MAX_SPEED)
 
     -- Calculate velocity based on angle

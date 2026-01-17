@@ -32,6 +32,20 @@ local is_initialized = false
 -- Master volume for SFX
 local master_volume = 0.5
 
+-- Track active cloned sources to prevent memory accumulation
+local active_sources = {}
+
+-- Clean up finished audio sources to free memory
+local function cleanup_finished_sources()
+    for i = #active_sources, 1, -1 do
+        local source = active_sources[i]
+        if not source:isPlaying() then
+            source:release()
+            table.remove(active_sources, i)
+        end
+    end
+end
+
 --------------------------------------------------------------------------------
 -- Sound effect generators
 --------------------------------------------------------------------------------
@@ -267,10 +281,15 @@ function SFX.play(sfx_name, volume)
     local success, err = pcall(function()
         local source = get_or_generate_sfx(sfx_name)
         if source then
+            -- Clean up finished sources before creating new ones
+            cleanup_finished_sources()
+
             -- Clone the source for overlapping sounds (except ski_loop)
             local play_source = source
             if sfx_name ~= "ski_loop" then
                 play_source = source:clone()
+                -- Track the cloned source for later cleanup
+                table.insert(active_sources, play_source)
             end
 
             local vol = volume or master_volume
@@ -298,10 +317,20 @@ end
 
 -- Stop all sounds
 function SFX.stop_all()
+    -- Stop cached sources
     for name, source in pairs(sfx_cache) do
         pcall(function()
             source:stop()
         end)
+    end
+
+    -- Stop and release all active cloned sources
+    for i = #active_sources, 1, -1 do
+        pcall(function()
+            active_sources[i]:stop()
+            active_sources[i]:release()
+        end)
+        table.remove(active_sources, i)
     end
 end
 
@@ -333,6 +362,7 @@ end
 function SFX.clear_cache()
     SFX.stop_all()
     sfx_cache = {}
+    active_sources = {}
 end
 
 return SFX

@@ -53,9 +53,6 @@ function MenuState:enter()
     Music.play("menu")
 end
 
-function MenuState:exit()
-end
-
 function MenuState:update(dt)
     -- Update snow particles
     for _, p in ipairs(snow_particles) do

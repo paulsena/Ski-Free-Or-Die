@@ -48,6 +48,9 @@ Obstacle.TYPES = {
 -- Ordered list of type names for deterministic iteration
 Obstacle.TYPE_ORDER = {"small_tree", "large_tree", "rock", "cabin", "snow_mound"}
 
+-- Non-seeded constructor - uses fixed visual defaults for determinism.
+-- WARNING: Do NOT use this function for deterministic gameplay (e.g., Weekly Time Trial).
+-- Use Obstacle.new_seeded() or Obstacle.spawn_random_seeded() instead for reproducible runs.
 function Obstacle.new(x, y, obs_type)
     local type_def = Obstacle.TYPES[obs_type]
     if not type_def then
@@ -63,9 +66,9 @@ function Obstacle.new(x, y, obs_type)
         height = type_def.height,
         collision_type = type_def.collision_type,
         speed_penalty = type_def.speed_penalty,
-        -- Visual variation
-        scale = 0.9 + math.random() * 0.2,
-        flip = math.random() > 0.5
+        -- Fixed visual defaults (no random variation for determinism)
+        scale = 1.0,
+        flip = false
     }
     return setmetatable(self, {__index = Obstacle})
 end
