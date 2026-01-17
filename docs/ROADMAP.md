@@ -16,7 +16,7 @@
 | 3 | Procedural Generation | Tile-based map generation from seed | Complete |
 | 4 | Game Loop | Timer, finish line, restart | Complete |
 | 5 | Gates & Slalom | Gate system with penalties | Complete |
-| 6 | HUD & Polish | UI, visual feedback, basic audio | Partial |
+| 6 | HUD & Polish | UI, visual feedback, basic audio | Complete |
 | 7 | Endless Mode | Infinite generation, Yeti chase | Complete |
 | 8 | Advanced Features | Tricks, ramps, meta-progression | Not Started |
 
@@ -235,9 +235,9 @@
   - Shows final time, penalties, gate stats
   - Press to restart
 
-- [ ] **6.3** Add basic sound effects
+- [x] **6.3** Add basic sound effects
   - Ski loop, crash, gate pass, gate miss
-  - `assets/sounds/`
+  - Procedurally generated via `src/lib/sfx.lua`
 
 - [x] **6.4** Add screen shake on crash
   - Brief camera shake on rock/cabin collision
@@ -391,4 +391,6 @@ SkiFreeOrDie/
 4. Mark tasks complete with [x] when done
 5. Move to next phase when current is verified
 
-**Current Phase:** 6 - HUD & Polish (remaining: sound effects)
+**Current Phase:** 6 - HUD & Polish (COMPLETE!)
+
+**Next Phase:** 8 - Advanced Features (optional enhancements)
