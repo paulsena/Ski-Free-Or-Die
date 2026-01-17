@@ -9,13 +9,13 @@ local Skier = {}
 -- Discrete positions (like original SkiFree)
 -- Each position maps to an angle and can have a sprite assigned
 Skier.POSITIONS = {
-    { name = "FULL_LEFT",   angle = -80, speed_mult = 0.35 }, -- 1: Hard brake left (slow creep)
+    { name = "FULL_LEFT",   angle = -90, speed_mult = 0 }, -- 1: Full stop left (perpendicular)
     { name = "FAR_LEFT",    angle = -60, speed_mult = 1.0 },  -- 2: Sharp left (geometry only)
     { name = "LEFT",        angle = -30, speed_mult = 1.0 },  -- 3: Gentle left (geometry only)
     { name = "CENTER",      angle = 0,   speed_mult = 1.0 },  -- 4: Straight down (full speed)
     { name = "RIGHT",       angle = 30,  speed_mult = 1.0 },  -- 5: Gentle right (geometry only)
     { name = "FAR_RIGHT",   angle = 60,  speed_mult = 1.0 },  -- 6: Sharp right (geometry only)
-    { name = "FULL_RIGHT",  angle = 80,  speed_mult = 0.35 }, -- 7: Hard brake right (slow creep)
+    { name = "FULL_RIGHT",  angle = 90,  speed_mult = 0 }, -- 7: Full stop right (perpendicular)
 }
 
 -- Position index constants for easy reference
@@ -37,13 +37,16 @@ Skier.HITBOX_RADIUS = 8            -- Forgiving collision radius (scaled)
 Skier.DEFLECT_VX_FACTOR = 0.8      -- How much X velocity reverses on deflect
 
 -- Mouse control settings (zone thresholds in pixels from center)
-Skier.ZONE_CENTER = 60             -- 0-60px = straight (position 4)
-Skier.ZONE_GENTLE = 100            -- 61-100px = gentle turn (position 3/5)
-Skier.ZONE_SHARP = 140             -- 101-140px = sharp turn (position 2/6)
+Skier.ZONE_CENTER = 30             -- 0-30px = straight (position 4) - smaller deadzone
+Skier.ZONE_GENTLE = 80             -- 31-80px = gentle turn (position 3/5)
+Skier.ZONE_SHARP = 140             -- 81-140px = sharp turn (position 2/6)
                                    -- 141px+ = full brake turn (position 1/7)
 
 -- Speed interpolation factor for smooth acceleration/deceleration
 Skier.SPEED_LERP_FACTOR = 4
+Skier.STOP_LERP_FACTOR = 3            -- Deceleration when stopping (inertia)
+Skier.STOPPED_THRESHOLD = 5           -- Speed below which skier is considered stopped
+Skier.SIDEWAYS_PUSH_SPEED = 60        -- Speed of cross-country style sideways push
 
 function Skier.new(x, y)
     local self = {
@@ -58,6 +61,9 @@ function Skier.new(x, y)
         crash_timer = 0,
         is_immune = false,
         immunity_timer = 0,
+        is_stopped = false,           -- True when speed is below threshold
+        is_sliding = false,           -- True when decelerating from full turn (sliding downhill)
+        is_pushing = false,           -- True during sideways push animation
         -- Animation state
         anim_timer = 0,
         ski_spread = 1
@@ -109,6 +115,18 @@ function Skier:handle_input(dt, skier_screen_x)
     end
 
     self.position = new_position
+
+    -- Check for sideways push when sliding/stopped and facing sideways
+    self.is_pushing = false
+    if self.is_sliding or self.is_stopped then
+        if self.position == Skier.POS_FULL_LEFT and love.keyboard.isDown("a") then
+            self.is_pushing = true
+            self.push_direction = -1  -- Push left
+        elseif self.position == Skier.POS_FULL_RIGHT and love.keyboard.isDown("d") then
+            self.is_pushing = true
+            self.push_direction = 1   -- Push right
+        end
+    end
 end
 
 function Skier:move_position(delta)
@@ -128,6 +146,8 @@ function Skier:update(dt, slope_bounds)
             self.immunity_timer = Skier.IMMUNITY_DURATION
             self.speed = Skier.BASE_SPEED * 0.5
             self.position = Skier.POS_CENTER
+            self.is_stopped = false
+            self.is_sliding = false
         end
         return
     end
@@ -151,14 +171,40 @@ function Skier:update(dt, slope_bounds)
         target_speed = target_speed * (1 + Skier.TUCK_SPEED_BONUS)
     end
 
+    -- Check if we're in a full turn (stopping) position
+    local is_full_turn = (self.position == Skier.POS_FULL_LEFT or self.position == Skier.POS_FULL_RIGHT)
+
+    -- Use different lerp factor when decelerating to stop (inertia)
+    local lerp_factor = Skier.SPEED_LERP_FACTOR
+    if target_speed < self.speed and target_speed == 0 then
+        lerp_factor = Skier.STOP_LERP_FACTOR
+    end
+
     -- Accelerate/decelerate towards target speed
-    self.speed = Utils.lerp(self.speed, target_speed, dt * Skier.SPEED_LERP_FACTOR)
+    self.speed = Utils.lerp(self.speed, target_speed, dt * lerp_factor)
     self.speed = Utils.clamp(self.speed, 0, Skier.MAX_SPEED)
 
-    -- Calculate velocity based on angle
-    local angle_rad = Utils.deg_to_rad(angle)
-    self.vx = math.sin(angle_rad) * self.speed
-    self.vy = math.cos(angle_rad) * self.speed
+    -- Update stopped and sliding states
+    self.is_stopped = self.speed < Skier.STOPPED_THRESHOLD
+    self.is_sliding = is_full_turn and not self.is_stopped and self.speed > 0
+
+    -- Calculate velocity
+    if self.is_sliding then
+        -- Sliding: move straight down the mountain (inertia)
+        self.vx = 0
+        self.vy = self.speed
+    else
+        -- Normal movement: based on angle
+        local angle_rad = Utils.deg_to_rad(angle)
+        self.vx = math.sin(angle_rad) * self.speed
+        self.vy = math.cos(angle_rad) * self.speed
+    end
+
+    -- Apply sideways push if pushing (cross-country style)
+    -- This adds to any existing velocity (can push while sliding)
+    if self.is_pushing then
+        self.vx = self.vx + self.push_direction * Skier.SIDEWAYS_PUSH_SPEED
+    end
 
     -- Apply velocity
     self.x = self.x + self.vx * dt
