@@ -12,6 +12,8 @@ local Music = require("src.lib.music")
 local SFX = require("src.lib.sfx")
 local Particles = require("src.systems.particles")
 local Collision = require("src.systems.collision")
+local Leaderboard = require("src.core.leaderboard")
+local StateManager = require("src.core.state_manager")
 
 local PlayState = {}
 
@@ -420,7 +422,7 @@ function PlayState:draw_game_over()
 
     -- Restart prompt
     Colors.set(Colors.MINT_GREEN)
-    love.graphics.printf("Press R to restart | ESC for menu", 0, GAME_HEIGHT - 25, GAME_WIDTH, "center")
+    love.graphics.printf("ENTER: Continue | R: Restart | ESC: Menu", 0, GAME_HEIGHT - 25, GAME_WIDTH, "center")
 end
 
 function PlayState:draw_pause()
@@ -457,6 +459,35 @@ function PlayState:keypressed(key)
         else
             Music.set_volume(0.7)
         end
+    elseif key == "return" and self.is_finished then
+        -- Check for high score on enter
+        self:check_high_score()
+    end
+end
+
+function PlayState:check_high_score()
+    -- Calculate score based on game mode
+    local stats = {
+        time = self.elapsed_time,
+        distance = self.distance,
+        gates_passed = self.gates_passed,
+        gates_missed = self.gates_missed
+    }
+
+    local score = Leaderboard.calculate_score(self.mode, stats)
+    local qualifies, rank = Leaderboard.qualifies(self.mode, score)
+
+    if qualifies then
+        -- Go to name entry screen
+        StateManager.switch("name_entry", {
+            mode = self.mode,
+            score = score,
+            rank = rank,
+            stats = stats
+        })
+    else
+        -- Just go to high scores screen
+        StateManager.switch("highscores", {mode = self.mode})
     end
 end
 
