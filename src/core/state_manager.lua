@@ -52,6 +52,18 @@ function StateManager.keyreleased(key)
     end
 end
 
+function StateManager.mousepressed(x, y, button)
+    if current_state and current_state.mousepressed then
+        current_state:mousepressed(x, y, button)
+    end
+end
+
+function StateManager.wheelmoved(x, y)
+    if current_state and current_state.wheelmoved then
+        current_state:wheelmoved(x, y)
+    end
+end
+
 function StateManager.get_current()
     return current_state
 end

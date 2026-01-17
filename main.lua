@@ -131,6 +131,16 @@ function love.keyreleased(key)
     StateManager.keyreleased(key)
 end
 
+function love.mousepressed(x, y, button)
+    -- Convert to game coordinates before passing to state
+    local game_x, game_y = love.getGameMousePosition()
+    StateManager.mousepressed(game_x, game_y, button)
+end
+
+function love.wheelmoved(x, y)
+    StateManager.wheelmoved(x, y)
+end
+
 function love.resize(w, h)
     -- Window resized, canvas scaling handled in draw
 end

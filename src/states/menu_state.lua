@@ -23,8 +23,13 @@ local snow_particles = {}
 local menu_selection = 1
 local menu_options = {"Time Trial", "Endless Mode", "High Scores", "Quit"}
 
+-- Mouse wheel dead zone
+local wheel_accumulator = 0
+local WHEEL_THRESHOLD = 2  -- Number of wheel clicks needed to move selection
+
 function MenuState:enter()
     menu_selection = 1
+    wheel_accumulator = 0
 
     -- Load background image
     if not background_image then
@@ -156,6 +161,45 @@ function MenuState:keypressed(key)
         else
             Music.set_volume(0.7)
         end
+    end
+end
+
+function MenuState:mousepressed(x, y, button)
+    if button == 1 then  -- Left click
+        -- Check if click is on a menu item
+        local menu_start_y = 355
+        local item_height = 28
+        local font_height = 16
+
+        for i = 1, #menu_options do
+            local item_y = menu_start_y + (i - 1) * item_height
+            -- Check if click is within this menu item's bounds
+            if y >= item_y and y <= item_y + font_height then
+                menu_selection = i
+                self:select_option()
+                return
+            end
+        end
+    end
+end
+
+function MenuState:wheelmoved(x, y)
+    wheel_accumulator = wheel_accumulator + y
+
+    if wheel_accumulator >= WHEEL_THRESHOLD then
+        -- Scroll up
+        menu_selection = menu_selection - 1
+        if menu_selection < 1 then
+            menu_selection = #menu_options
+        end
+        wheel_accumulator = 0
+    elseif wheel_accumulator <= -WHEEL_THRESHOLD then
+        -- Scroll down
+        menu_selection = menu_selection + 1
+        if menu_selection > #menu_options then
+            menu_selection = 1
+        end
+        wheel_accumulator = 0
     end
 end
 
