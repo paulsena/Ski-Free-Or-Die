@@ -2,12 +2,32 @@
 -- Procedural 80s chiptune music synthesis system
 -- Think OutRun, California Games, Top Gear SNES vibes
 
+local AudioSynthesis = require("src.lib.audio_synthesis")
+
 local Music = {}
 
--- Audio settings
-local SAMPLE_RATE = 44100
-local BITS = 16
-local CHANNELS = 1
+-- Audio settings (from shared module)
+local SAMPLE_RATE = AudioSynthesis.SAMPLE_RATE
+
+-- Import waveform generators
+local square_wave = AudioSynthesis.square_wave
+local triangle_wave = AudioSynthesis.triangle_wave
+local sawtooth_wave = AudioSynthesis.sawtooth_wave
+local sine_wave = AudioSynthesis.sine_wave
+local noise_wave = AudioSynthesis.noise_wave
+local pulse_wave = AudioSynthesis.pulse_wave
+local reset_noise = AudioSynthesis.reset_noise
+
+-- Import envelope generators
+local adsr_envelope = AudioSynthesis.adsr_envelope
+local punchy_envelope = AudioSynthesis.punchy_envelope
+local stab_envelope = AudioSynthesis.stab_envelope
+local lead_envelope = AudioSynthesis.lead_envelope
+local hihat_envelope = AudioSynthesis.hihat_envelope
+
+-- Import sample helpers
+local normalize_samples = AudioSynthesis.normalize_samples
+local samples_to_sound_data = AudioSynthesis.samples_to_sound_data
 
 -- Music state
 local current_source = nil
@@ -28,93 +48,6 @@ local NOTES = {
 NOTES["C#3"] = 138.59; NOTES["D#3"] = 155.56; NOTES["F#3"] = 185.00; NOTES["G#3"] = 207.65; NOTES["A#3"] = 233.08
 NOTES["C#4"] = 277.18; NOTES["D#4"] = 311.13; NOTES["F#4"] = 369.99; NOTES["G#4"] = 415.30; NOTES["A#4"] = 466.16
 NOTES["C#5"] = 554.37; NOTES["D#5"] = 622.25; NOTES["F#5"] = 739.99; NOTES["G#5"] = 830.61; NOTES["A#5"] = 932.33
-
---------------------------------------------------------------------------------
--- Waveform generators
---------------------------------------------------------------------------------
-
--- Square wave - classic 8-bit lead sound
-local function square_wave(phase, duty_cycle)
-    duty_cycle = duty_cycle or 0.5
-    return phase % 1 < duty_cycle and 1 or -1
-end
-
--- Triangle wave - softer bass tones
-local function triangle_wave(phase)
-    local t = phase % 1
-    return 4 * math.abs(t - 0.5) - 1
-end
-
--- Sawtooth wave - bright, buzzy synth sounds
-local function sawtooth_wave(phase)
-    return 2 * (phase % 1) - 1
-end
-
--- Noise - for percussion/hi-hats (using deterministic pseudo-random)
-local noise_seed = 12345
-local function noise_wave()
-    noise_seed = (noise_seed * 1103515245 + 12345) % 2147483648
-    return (noise_seed / 1073741824) - 1
-end
-
--- Reset noise seed for consistent playback
-local function reset_noise()
-    noise_seed = 12345
-end
-
--- Pulse wave with variable width (for 80s synth stabs)
-local function pulse_wave(phase, width)
-    width = width or 0.25
-    return phase % 1 < width and 1 or -1
-end
-
--- Sine wave - for smooth bass
-local function sine_wave(phase)
-    return math.sin(phase * 2 * math.pi)
-end
-
---------------------------------------------------------------------------------
--- Envelope generators (ADSR)
---------------------------------------------------------------------------------
-
-local function adsr_envelope(t, duration, attack, decay, sustain, release)
-    local attack_time = attack * duration
-    local decay_time = decay * duration
-    local release_time = release * duration
-    local sustain_time = duration - attack_time - decay_time - release_time
-
-    if t < attack_time then
-        return t / attack_time
-    elseif t < attack_time + decay_time then
-        local decay_progress = (t - attack_time) / decay_time
-        return 1 - (1 - sustain) * decay_progress
-    elseif t < duration - release_time then
-        return sustain
-    else
-        local release_progress = (t - (duration - release_time)) / release_time
-        return sustain * (1 - release_progress)
-    end
-end
-
--- Punchy envelope for bass/drums
-local function punchy_envelope(t, duration)
-    return adsr_envelope(t, duration, 0.01, 0.15, 0.4, 0.2)
-end
-
--- Synth stab envelope
-local function stab_envelope(t, duration)
-    return adsr_envelope(t, duration, 0.02, 0.1, 0.7, 0.15)
-end
-
--- Lead envelope with sustain
-local function lead_envelope(t, duration)
-    return adsr_envelope(t, duration, 0.05, 0.1, 0.8, 0.1)
-end
-
--- Snappy hi-hat envelope
-local function hihat_envelope(t, duration)
-    return adsr_envelope(t, duration, 0.001, 0.05, 0.1, 0.2)
-end
 
 --------------------------------------------------------------------------------
 -- Sound synthesis helpers
@@ -171,24 +104,6 @@ local function append_samples(dest, src)
     end
 end
 
--- Normalize samples to prevent clipping
-local function normalize_samples(samples, target_peak)
-    target_peak = target_peak or 0.9
-    local max_val = 0
-    for _, s in ipairs(samples) do
-        max_val = math.max(max_val, math.abs(s))
-    end
-
-    if max_val > 0 then
-        local scale = target_peak / max_val
-        for i = 1, #samples do
-            samples[i] = samples[i] * scale
-        end
-    end
-
-    return samples
-end
-
 -- Add reverb/delay effect
 local function add_delay(samples, delay_time, decay, mix)
     delay_time = delay_time or 0.1
@@ -207,20 +122,6 @@ local function add_delay(samples, delay_time, decay, mix)
     end
 
     return result
-end
-
--- Convert float samples to SoundData
-local function samples_to_sound_data(samples)
-    local sound_data = love.sound.newSoundData(#samples, SAMPLE_RATE, BITS, CHANNELS)
-
-    for i = 1, #samples do
-        local sample = samples[i]
-        -- Clamp to [-1, 1]
-        sample = math.max(-1, math.min(1, sample))
-        sound_data:setSample(i - 1, sample)
-    end
-
-    return sound_data
 end
 
 --------------------------------------------------------------------------------
@@ -509,21 +410,7 @@ local function generate_gameplay_theme()
                 end
             end
 
-            -- Kick on 1 and 3, and on the "and" of 2 and 4
-            local kick_beats = {0, 1.5, 2, 3.5}
-            for _, kick_offset in ipairs(kick_beats) do
-                if beat + kick_offset / 4 < 4 then
-                    local actual_beat = beat + (kick_offset % 1) * 0.5
-                    if kick_offset == 0 or kick_offset == 1.5 or kick_offset == 2 or kick_offset == 3.5 then
-                        local is_on_beat = (beat == 0 or beat == 2) and (kick_offset % 2 == 0)
-                        if is_on_beat or (kick_offset == 1.5 or kick_offset == 3.5) then
-                            -- Simplified: kick on 1, 2-and, 3, 4-and
-                        end
-                    end
-                end
-            end
-
-            -- Simplified kick pattern: 1, 2-and, 3, 4-and
+            -- Kick on 1 and 3
             if beat == 0 or beat == 2 then
                 local kick_start = math.floor(beat_start * SAMPLE_RATE)
                 local kick_len = math.floor(beat_duration * 0.12 * SAMPLE_RATE)
@@ -1061,14 +948,6 @@ end
 -- Get current track name
 function Music.get_current_track()
     return current_track
-end
-
--- Fade out current music over duration seconds
-function Music.fade_out(duration)
-    duration = duration or 1.0
-    -- Note: This would need to be called in an update loop
-    -- For now, just stop
-    Music.stop()
 end
 
 -- Pre-generate all tracks (call during loading screen if you have one)

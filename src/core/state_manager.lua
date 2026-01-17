@@ -12,6 +12,10 @@ function StateManager.register(name, state)
 end
 
 function StateManager.switch(name, ...)
+    if not states[name] then
+        error("StateManager: attempted to switch to unknown state '" .. tostring(name) .. "'")
+    end
+
     if current_state and current_state.exit then
         current_state:exit()
     end

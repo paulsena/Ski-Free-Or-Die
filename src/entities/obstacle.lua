@@ -45,6 +45,9 @@ Obstacle.TYPES = {
     }
 }
 
+-- Ordered list of type names for deterministic iteration
+Obstacle.TYPE_ORDER = {"small_tree", "large_tree", "rock", "cabin", "snow_mound"}
+
 function Obstacle.new(x, y, obs_type)
     local type_def = Obstacle.TYPES[obs_type]
     if not type_def then
@@ -70,15 +73,15 @@ end
 function Obstacle.spawn_random(x, y)
     -- Weighted random selection (uses math.random - non-deterministic)
     local total_weight = 0
-    for _, def in pairs(Obstacle.TYPES) do
-        total_weight = total_weight + def.spawn_weight
+    for _, type_name in ipairs(Obstacle.TYPE_ORDER) do
+        total_weight = total_weight + Obstacle.TYPES[type_name].spawn_weight
     end
 
     local roll = math.random() * total_weight
     local cumulative = 0
 
-    for type_name, def in pairs(Obstacle.TYPES) do
-        cumulative = cumulative + def.spawn_weight
+    for _, type_name in ipairs(Obstacle.TYPE_ORDER) do
+        cumulative = cumulative + Obstacle.TYPES[type_name].spawn_weight
         if roll <= cumulative then
             return Obstacle.new(x, y, type_name)
         end
@@ -91,15 +94,15 @@ end
 function Obstacle.spawn_random_seeded(x, y, rng)
     -- Weighted random selection using seeded RNG
     local total_weight = 0
-    for _, def in pairs(Obstacle.TYPES) do
-        total_weight = total_weight + def.spawn_weight
+    for _, type_name in ipairs(Obstacle.TYPE_ORDER) do
+        total_weight = total_weight + Obstacle.TYPES[type_name].spawn_weight
     end
 
     local roll = rng:random() * total_weight
     local cumulative = 0
 
-    for type_name, def in pairs(Obstacle.TYPES) do
-        cumulative = cumulative + def.spawn_weight
+    for _, type_name in ipairs(Obstacle.TYPE_ORDER) do
+        cumulative = cumulative + Obstacle.TYPES[type_name].spawn_weight
         if roll <= cumulative then
             return Obstacle.new_seeded(x, y, type_name, rng)
         end

@@ -1,13 +1,29 @@
 -- src/lib/sfx.lua
 -- Procedural sound effects system for Ski Free Or Die
--- Uses the same synthesis approach as music.lua
+-- Uses shared audio synthesis primitives
+
+local AudioSynthesis = require("src.lib.audio_synthesis")
 
 local SFX = {}
 
--- Audio settings
-local SAMPLE_RATE = 44100
-local BITS = 16
-local CHANNELS = 1
+-- Audio settings (from shared module)
+local SAMPLE_RATE = AudioSynthesis.SAMPLE_RATE
+
+-- Import waveform generators
+local square_wave = AudioSynthesis.square_wave
+local triangle_wave = AudioSynthesis.triangle_wave
+local sawtooth_wave = AudioSynthesis.sawtooth_wave
+local sine_wave = AudioSynthesis.sine_wave
+local noise_wave = AudioSynthesis.noise_wave
+local reset_noise = AudioSynthesis.reset_noise
+
+-- Import envelope generators
+local punchy_envelope = AudioSynthesis.punchy_envelope
+local quick_envelope = AudioSynthesis.quick_envelope
+
+-- Import sample helpers
+local normalize_samples = AudioSynthesis.normalize_samples
+local samples_to_sound_data = AudioSynthesis.samples_to_sound_data
 
 -- SFX cache
 local sfx_cache = {}
@@ -15,107 +31,6 @@ local is_initialized = false
 
 -- Master volume for SFX
 local master_volume = 0.5
-
---------------------------------------------------------------------------------
--- Waveform generators (copied from music.lua for self-contained module)
---------------------------------------------------------------------------------
-
-local function square_wave(phase, duty_cycle)
-    duty_cycle = duty_cycle or 0.5
-    return phase % 1 < duty_cycle and 1 or -1
-end
-
-local function triangle_wave(phase)
-    local t = phase % 1
-    return 4 * math.abs(t - 0.5) - 1
-end
-
-local function sawtooth_wave(phase)
-    return 2 * (phase % 1) - 1
-end
-
-local function sine_wave(phase)
-    return math.sin(phase * 2 * math.pi)
-end
-
--- Noise generator
-local noise_seed = 12345
-local function noise_wave()
-    noise_seed = (noise_seed * 1103515245 + 12345) % 2147483648
-    return (noise_seed / 1073741824) - 1
-end
-
-local function reset_noise()
-    noise_seed = 12345
-end
-
---------------------------------------------------------------------------------
--- Envelope generators
---------------------------------------------------------------------------------
-
-local function adsr_envelope(t, duration, attack, decay, sustain, release)
-    local attack_time = attack * duration
-    local decay_time = decay * duration
-    local release_time = release * duration
-    local sustain_time = duration - attack_time - decay_time - release_time
-
-    if t < attack_time then
-        return t / attack_time
-    elseif t < attack_time + decay_time then
-        local decay_progress = (t - attack_time) / decay_time
-        return 1 - (1 - sustain) * decay_progress
-    elseif t < duration - release_time then
-        return sustain
-    else
-        local release_progress = (t - (duration - release_time)) / release_time
-        return sustain * (1 - release_progress)
-    end
-end
-
-local function punchy_envelope(t, duration)
-    return adsr_envelope(t, duration, 0.01, 0.15, 0.4, 0.2)
-end
-
-local function quick_envelope(t, duration)
-    return adsr_envelope(t, duration, 0.001, 0.05, 0.3, 0.3)
-end
-
-local function smooth_fade(t, duration)
-    return adsr_envelope(t, duration, 0.1, 0.1, 0.8, 0.2)
-end
-
---------------------------------------------------------------------------------
--- Sample conversion helpers
---------------------------------------------------------------------------------
-
-local function normalize_samples(samples, target_peak)
-    target_peak = target_peak or 0.9
-    local max_val = 0
-    for _, s in ipairs(samples) do
-        max_val = math.max(max_val, math.abs(s))
-    end
-
-    if max_val > 0 then
-        local scale = target_peak / max_val
-        for i = 1, #samples do
-            samples[i] = samples[i] * scale
-        end
-    end
-
-    return samples
-end
-
-local function samples_to_sound_data(samples)
-    local sound_data = love.sound.newSoundData(#samples, SAMPLE_RATE, BITS, CHANNELS)
-
-    for i = 1, #samples do
-        local sample = samples[i]
-        sample = math.max(-1, math.min(1, sample))
-        sound_data:setSample(i - 1, sample)
-    end
-
-    return sound_data
-end
 
 --------------------------------------------------------------------------------
 -- Sound effect generators

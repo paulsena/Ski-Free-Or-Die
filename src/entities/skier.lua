@@ -186,7 +186,7 @@ function Skier:slow_down(factor)
     self.speed = self.speed * factor
 end
 
-function Skier:deflect(direction)
+function Skier:deflect()
     self.vx = -self.vx * Skier.DEFLECT_VX_FACTOR
     -- Move position towards center on deflect
     if self.position < Skier.POS_CENTER then

@@ -6,6 +6,7 @@ local StateManager = require("src.core.state_manager")
 local Colors = require("src.colors")
 local Config = require("src.core.config")
 local SidebarHUD = require("src.ui.sidebar_hud")
+local Skier = require("src.entities.skier")
 
 -- Game constants (loaded from Config)
 local GAME_WIDTH = Config.GAME_WIDTH
@@ -87,7 +88,6 @@ function love.draw()
     -- Draw sidebar HUD in letterbox areas (only during play state)
     if StateManager.get_current_name() == "play" and offset_x > 50 then
         local state = StateManager.get_current()
-        local Skier = require("src.entities.skier")
 
         -- Build HUD state table from play state
         local raw_speed = state.skier and state.skier.speed or 0
