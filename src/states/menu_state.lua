@@ -11,23 +11,40 @@ local MenuState = {}
 local GAME_WIDTH = Config.GAME_WIDTH
 local GAME_HEIGHT = Config.GAME_HEIGHT
 
+-- Background image
+local background_image = nil
+
+-- Fonts
+local menu_font = nil
+local hint_font = nil
+
 -- Animation variables
-local title_wave = 0
 local snow_particles = {}
 local menu_selection = 1
 local menu_options = {"Time Trial", "Endless Mode", "Quit"}
 
 function MenuState:enter()
     menu_selection = 1
-    title_wave = 0
 
-    -- Initialize falling snow particles for background
+    -- Load background image
+    if not background_image then
+        background_image = love.graphics.newImage("assets/images/game_main_screen.png")
+        background_image:setFilter("nearest", "nearest")
+    end
+
+    -- Create fonts
+    if not menu_font then
+        menu_font = love.graphics.newFont(16)
+        hint_font = love.graphics.newFont(10)
+    end
+
+    -- Initialize falling snow particles for overlay effect
     snow_particles = {}
-    for i = 1, 30 do
+    for i = 1, 20 do
         table.insert(snow_particles, {
             x = math.random(0, GAME_WIDTH),
             y = math.random(0, GAME_HEIGHT),
-            speed = math.random(10, 30),
+            speed = math.random(15, 35),
             size = math.random(1, 2)
         })
     end
@@ -40,9 +57,6 @@ function MenuState:exit()
 end
 
 function MenuState:update(dt)
-    -- Animate title wave
-    title_wave = title_wave + dt * 3
-
     -- Update snow particles
     for _, p in ipairs(snow_particles) do
         p.y = p.y + p.speed * dt
@@ -55,109 +69,74 @@ function MenuState:update(dt)
 end
 
 function MenuState:draw()
-    -- Draw gradient sky background
-    for y = 0, GAME_HEIGHT do
-        local t = y / GAME_HEIGHT
-        local r = 0.529 * (1 - t * 0.3)
-        local g = 0.808 * (1 - t * 0.2)
-        local b = 0.922
-        love.graphics.setColor(r, g, b)
-        love.graphics.line(0, y, GAME_WIDTH, y)
-    end
+    -- Draw background image scaled to fit game window
+    love.graphics.setColor(1, 1, 1)
+    local img_width = background_image:getWidth()
+    local img_height = background_image:getHeight()
+    local scale_x = GAME_WIDTH / img_width
+    local scale_y = GAME_HEIGHT / img_height
+    love.graphics.draw(background_image, 0, 0, 0, scale_x, scale_y)
 
-    -- Draw snow particles
-    Colors.set(Colors.SNOW_WHITE)
+    -- Draw subtle snow particles overlay
+    love.graphics.setColor(1, 1, 1, 0.7)
     for _, p in ipairs(snow_particles) do
         love.graphics.rectangle("fill", p.x, p.y, p.size, p.size)
     end
 
-    -- Draw mountains in background
-    love.graphics.setColor(0.7, 0.75, 0.85)
-    love.graphics.polygon("fill",
-        0, 140,
-        60, 80,
-        120, 140
-    )
-    love.graphics.polygon("fill",
-        80, 140,
-        160, 60,
-        240, 140
-    )
-    love.graphics.polygon("fill",
-        200, 140,
-        280, 90,
-        320, 140
-    )
-
-    -- Snow caps on mountains
-    Colors.set(Colors.SNOW_WHITE)
-    love.graphics.polygon("fill",
-        60, 80,
-        50, 95,
-        70, 95
-    )
-    love.graphics.polygon("fill",
-        160, 60,
-        145, 80,
-        175, 80
-    )
-    love.graphics.polygon("fill",
-        280, 90,
-        268, 105,
-        292, 105
-    )
-
-    -- Draw snow ground
-    Colors.set(Colors.SNOW)
-    love.graphics.rectangle("fill", 0, 140, GAME_WIDTH, 40)
-
-    -- Draw title with wave effect
-    self:draw_wavy_title("SKI FREE", 60, 25)
-    self:draw_wavy_title("OR DIE!", 85, 45)
-
-    -- Draw menu options
+    -- Draw menu options with drop shadows (positioned in lower portion of image)
+    love.graphics.setFont(menu_font)
+    local menu_start_y = 355
     for i, option in ipairs(menu_options) do
-        local y = 95 + i * 18
-        if i == menu_selection then
-            -- Selected item with hot pink
-            Colors.set(Colors.HOT_PINK)
-            love.graphics.print(">", 100, y)
-            love.graphics.print("<", 215, y)
+        local y = menu_start_y + (i - 1) * 28
+        local is_selected = (i == menu_selection)
+
+        -- Draw thick outline/shadow (multiple passes for bold shadow)
+        love.graphics.setColor(0, 0, 0, 1)
+        for ox = -2, 2 do
+            for oy = -2, 2 do
+                if ox ~= 0 or oy ~= 0 then
+                    love.graphics.printf(option, ox, y + oy, GAME_WIDTH, "center")
+                end
+            end
+        end
+
+        -- Draw selection arrows with outline
+        if is_selected then
+            love.graphics.setColor(0, 0, 0, 1)
+            for ox = -2, 2 do
+                for oy = -2, 2 do
+                    if ox ~= 0 or oy ~= 0 then
+                        love.graphics.print(">", 70 + ox, y + oy)
+                        love.graphics.print("<", 245 + ox, y + oy)
+                    end
+                end
+            end
+        end
+
+        -- Draw main text
+        if is_selected then
+            Colors.set(Colors.BRIGHT_YELLOW)
+            love.graphics.print(">", 70, y)
+            love.graphics.print("<", 245, y)
         else
-            Colors.set(Colors.BLACK)
+            Colors.set(Colors.SNOW_WHITE)
         end
         love.graphics.printf(option, 0, y, GAME_WIDTH, "center")
     end
 
-    -- Draw controls hint
-    love.graphics.setColor(0.7, 0.7, 0.8)
-    love.graphics.printf("Arrows: Steer | Down: Tuck | M: Mute | ESC: Menu", 0, 168, GAME_WIDTH, "center")
-end
-
-function MenuState:draw_wavy_title(text, start_x, y)
-    local letters = {}
-    local colors = {
-        Colors.HOT_PINK,
-        Colors.ELECTRIC_BLUE,
-        Colors.BRIGHT_YELLOW,
-        Colors.MINT_GREEN
-    }
-
-    for i = 1, #text do
-        local char = text:sub(i, i)
-        local wave_offset = math.sin(title_wave + i * 0.5) * 3
-        local color = colors[(i - 1) % #colors + 1]
-
-        Colors.set(color)
-
-        -- Draw shadow
-        love.graphics.setColor(0, 0, 0, 0.5)
-        love.graphics.print(char, start_x + (i - 1) * 10 + 1, y + wave_offset + 1)
-
-        -- Draw letter
-        Colors.set(color)
-        love.graphics.print(char, start_x + (i - 1) * 10, y + wave_offset)
+    -- Draw controls hint with drop shadow
+    love.graphics.setFont(hint_font)
+    local hint_y = 455
+    love.graphics.setColor(0, 0, 0, 1)
+    for ox = -1, 1 do
+        for oy = -1, 1 do
+            if ox ~= 0 or oy ~= 0 then
+                love.graphics.printf("Arrows: Steer | Down: Tuck | M: Mute", ox, hint_y + oy, GAME_WIDTH, "center")
+            end
+        end
     end
+    love.graphics.setColor(0.9, 0.9, 1, 1)
+    love.graphics.printf("Arrows: Steer | Down: Tuck | M: Mute", 0, hint_y, GAME_WIDTH, "center")
 end
 
 function MenuState:keypressed(key)

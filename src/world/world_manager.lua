@@ -9,12 +9,16 @@ local TileData = require("src.world.tile_data")
 local TileGenerator = require("src.world.tile_generator")
 local Config = require("src.core.config")
 
+-- Visible area calculations based on camera offset (skier at 30% from top)
+local VISIBLE_ABOVE = Config.GAME_HEIGHT * 0.3 + 50  -- Extra buffer for tall sprites
+local VISIBLE_BELOW = Config.GAME_HEIGHT * 0.7 + 50  -- Extra buffer
+
 local WorldManager = {}
 
 -- World constants
 WorldManager.SLOPE_WIDTH = 150         -- Half-width of the skiable area
-WorldManager.SPAWN_AHEAD = 400         -- How far ahead to spawn content
-WorldManager.DESPAWN_BEHIND = 200      -- How far behind to despawn content
+WorldManager.SPAWN_AHEAD = Config.SPAWN_AHEAD    -- How far ahead to spawn content
+WorldManager.DESPAWN_BEHIND = Config.DESPAWN_BEHIND  -- How far behind to despawn content
 
 function WorldManager.new(seed, mode)
     seed = seed or Config.get_weekly_seed()
@@ -194,8 +198,8 @@ function WorldManager:check_finish(skier_y)
 end
 
 function WorldManager:draw(camera_y)
-    local visible_top = camera_y - 200
-    local visible_bottom = camera_y + 200
+    local visible_top = camera_y - VISIBLE_ABOVE
+    local visible_bottom = camera_y + VISIBLE_BELOW
 
     -- Draw tile backgrounds/indicators (optional, for debugging)
     -- self:draw_tile_debug(camera_y)

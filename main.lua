@@ -5,6 +5,7 @@
 local StateManager = require("src.core.state_manager")
 local Colors = require("src.colors")
 local Config = require("src.core.config")
+local SidebarHUD = require("src.ui.sidebar_hud")
 
 -- Game constants (loaded from Config)
 local GAME_WIDTH = Config.GAME_WIDTH
@@ -74,6 +75,32 @@ function love.draw()
 
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(canvas, offset_x, offset_y, 0, scale, scale)
+
+    -- Draw sidebar HUD in letterbox areas (only during play state)
+    if StateManager.get_current_name() == "play" and offset_x > 50 then
+        local state = StateManager.get_current()
+        local Skier = require("src.entities.skier")
+
+        -- Build HUD state table from play state
+        local raw_speed = state.skier and state.skier.speed or 0
+        local hud_state = {
+            elapsed_time = state.elapsed_time or 0,
+            speed_mph = raw_speed * 0.17,  -- Convert pixels/sec to mph
+            speed_ratio = raw_speed / Skier.MAX_SPEED,
+            gates_passed = state.gates_passed or 0,
+            gates_missed = state.gates_missed or 0,
+            distance = state.distance or 0,
+            is_tucking = state.skier and state.skier.is_tucking or false,
+            is_crashed = state.skier and state.skier.is_crashed or false,
+            mode = state.mode or "trial"
+        }
+
+        local window_width = love.graphics.getWidth()
+        local window_height = love.graphics.getHeight()
+
+        -- Left sidebar (Arcade) and Right sidebar (California Games)
+        SidebarHUD.draw(0, offset_x, window_width - offset_x, offset_x, window_height, hud_state)
+    end
 end
 
 function love.keypressed(key)

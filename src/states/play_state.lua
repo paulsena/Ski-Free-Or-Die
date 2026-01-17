@@ -64,9 +64,6 @@ function PlayState:enter(params)
 
     -- Play gameplay music
     Music.play("gameplay")
-
-    -- Start ski loop sound
-    SFX.play("ski_loop")
 end
 
 function PlayState:exit()
@@ -88,15 +85,6 @@ function PlayState:update(dt)
     -- Handle input and update skier
     self.skier:handle_input(dt)
     self.skier:update(dt, self.world:get_slope_bounds())
-
-    -- Manage ski loop sound based on crash state
-    if self.skier.is_crashed then
-        SFX.stop("ski_loop")
-    elseif not self.skier.is_crashed then
-        -- Resume ski loop if not playing (e.g., after crash recovery)
-        -- Note: SFX.play on looping sound is idempotent (won't restart if playing)
-        SFX.play("ski_loop")
-    end
 
     -- Update camera
     self.camera:set_target(self.skier.x, self.skier.y)
@@ -196,8 +184,6 @@ end
 function PlayState:game_over(reason)
     self.is_finished = true
     self.game_over_reason = reason
-    -- Stop ski loop sound
-    SFX.stop("ski_loop")
     -- Play game over music
     Music.play("gameover")
 end
@@ -224,8 +210,15 @@ function PlayState:draw()
         self.yeti:draw(self.camera.y, GAME_HEIGHT)
     end
 
-    -- Draw HUD (not affected by camera)
-    self:draw_hud()
+    -- Draw crash indicator (important gameplay feedback)
+    if self.skier.is_crashed then
+        Colors.set(Colors.HOT_PINK)
+        local crash_text = "CRASHED!"
+        if self.skier.crash_timer > 0 then
+            crash_text = string.format("CRASHED! %.1f", self.skier.crash_timer)
+        end
+        love.graphics.printf(crash_text, 0, GAME_HEIGHT / 2 - 6, GAME_WIDTH, "center")
+    end
 
     -- Draw yeti warning in endless mode
     if self.mode == "endless" then
@@ -290,68 +283,6 @@ function PlayState:draw_slope()
         love.graphics.rectangle("fill", -WorldManager.SLOPE_WIDTH - 12, y - 2, 8, 4)
         love.graphics.rectangle("fill", WorldManager.SLOPE_WIDTH + 4, y - 2, 8, 4)
     end
-end
-
-function PlayState:draw_hud()
-    -- Background bar
-    love.graphics.setColor(0, 0, 0, 0.75)
-    love.graphics.rectangle("fill", 0, 0, GAME_WIDTH, 14)
-
-    -- Timer
-    Colors.set(Colors.SNOW_WHITE)
-    local total_time = self.elapsed_time + self.gates_missed * 3
-    love.graphics.print(Utils.format_time(total_time), 4, 2)
-
-    -- Speed indicator with color based on speed
-    local speed_ratio = self.skier.speed / Skier.MAX_SPEED
-    if speed_ratio > 0.8 then
-        Colors.set(Colors.BRIGHT_YELLOW)
-    elseif speed_ratio > 0.5 then
-        Colors.set(Colors.ELECTRIC_BLUE)
-    else
-        Colors.set(Colors.SNOW_WHITE)
-    end
-    -- Convert pixels/sec to mph (0.2 mph per px/s)
-    local speed_mph = self.skier.speed * 0.2
-    love.graphics.print(string.format("%.0f mph", speed_mph), GAME_WIDTH - 50, 2)
-
-    -- Gates passed
-    Colors.set(Colors.MINT_GREEN)
-    love.graphics.print(string.format("G:%d", self.gates_passed), 90, 2)
-
-    -- Penalties
-    if self.gates_missed > 0 then
-        Colors.set(Colors.HOT_PINK)
-        love.graphics.print(string.format("+%ds", self.gates_missed * 3), 130, 2)
-    end
-
-    -- Tuck indicator
-    if self.skier.is_tucking then
-        Colors.set(Colors.BRIGHT_YELLOW)
-        love.graphics.print("TUCK", GAME_WIDTH - 85, 2)
-    end
-
-    -- Crash indicator
-    if self.skier.is_crashed then
-        Colors.set(Colors.HOT_PINK)
-        local crash_text = "CRASHED!"
-        if self.skier.crash_timer > 0 then
-            crash_text = string.format("CRASHED! %.1f", self.skier.crash_timer)
-        end
-        love.graphics.printf(crash_text, 0, GAME_HEIGHT / 2 - 6, GAME_WIDTH, "center")
-    end
-
-    -- Distance (bottom left)
-    love.graphics.setColor(0, 0, 0, 0.6)
-    love.graphics.rectangle("fill", 0, GAME_HEIGHT - 12, 55, 12)
-    Colors.set(Colors.SNOW_WHITE)
-    love.graphics.print(string.format("%dm", math.floor(self.distance / 10)), 4, GAME_HEIGHT - 11)
-
-    -- Mode indicator (bottom right)
-    love.graphics.setColor(0, 0, 0, 0.6)
-    love.graphics.rectangle("fill", GAME_WIDTH - 45, GAME_HEIGHT - 12, 45, 12)
-    Colors.set(Colors.ELECTRIC_BLUE)
-    love.graphics.print(self.mode == "endless" and "ENDLESS" or "TRIAL", GAME_WIDTH - 43, GAME_HEIGHT - 11)
 end
 
 function PlayState:draw_yeti_warning()
