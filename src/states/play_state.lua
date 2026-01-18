@@ -371,16 +371,17 @@ function PlayState:draw_pause()
     love.graphics.printf("PAUSED", 0, GAME_HEIGHT / 2 - 20, GAME_WIDTH, "center")
 
     Colors.set(Colors.SNOW_WHITE)
-    love.graphics.printf("Press P to resume", 0, GAME_HEIGHT / 2 + 5, GAME_WIDTH, "center")
-    love.graphics.printf("Press R to restart", 0, GAME_HEIGHT / 2 + 20, GAME_WIDTH, "center")
-    love.graphics.printf("Press ESC for menu", 0, GAME_HEIGHT / 2 + 35, GAME_WIDTH, "center")
+    love.graphics.printf("ESC: Resume", 0, GAME_HEIGHT / 2 + 5, GAME_WIDTH, "center")
+    love.graphics.printf("R: Restart", 0, GAME_HEIGHT / 2 + 20, GAME_WIDTH, "center")
+    Colors.set(Colors.HOT_PINK)
+    love.graphics.printf("Q: Quit to Menu", 0, GAME_HEIGHT / 2 + 35, GAME_WIDTH, "center")
 end
 
 function PlayState:keypressed(key)
     if key == "r" then
         -- Restart
         self:enter({mode = self.mode})
-    elseif key == "p" and not self.is_finished then
+    elseif (key == "p" or key == "escape") and not self.is_finished then
         self.is_paused = not self.is_paused
         -- Pause/resume music
         if self.is_paused then
@@ -388,6 +389,9 @@ function PlayState:keypressed(key)
         else
             Music.resume()
         end
+    elseif key == "q" and self.is_paused then
+        -- Quit to menu from pause screen
+        StateManager.switch("menu")
     elseif key == "m" then
         -- Toggle mute
         if Music.get_volume() > 0 then

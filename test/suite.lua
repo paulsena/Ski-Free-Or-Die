@@ -13,7 +13,8 @@ print("Running Tests for SkiFreeOrDie...")
 -- Load test modules
 require("test.test_seeded_random")
 require("test.test_collision")
-
--- Run other test files here as you add them
+require("test.test_utils")
+require("test.test_leaderboard")
+require("test.test_tile_data")
 
 Runner.report()

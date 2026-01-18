@@ -119,10 +119,9 @@ function love.keypressed(key)
         local current_state = StateManager.get_current_name()
         if current_state == "menu" then
             love.event.quit()
-        elseif current_state == "play" then
-            StateManager.switch("menu")
+            return
         end
-        -- Other states (highscores, name_entry) handle their own escape behavior
+        -- Play state handles its own escape (pause), other states handle theirs too
     end
     StateManager.keypressed(key)
 end
