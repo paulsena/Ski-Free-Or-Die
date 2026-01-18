@@ -361,6 +361,15 @@ local CHARS = {
         {1,0,0,0,1},
         {1,1,1,1,0},
     },
+    ["H"] = {
+        {1,0,0,0,1},
+        {1,0,0,0,1},
+        {1,0,0,0,1},
+        {1,1,1,1,1},
+        {1,0,0,0,1},
+        {1,0,0,0,1},
+        {1,0,0,0,1},
+    },
 }
 
 -- Draw a single blocky character
@@ -651,12 +660,30 @@ function SidebarHUD.draw_right(x, width, height, state)
 
     local y = 120
 
+    -- GROUP 1: Time, Penalty, Gates
+
     -- TIME
     draw_block_text("TIME", x, y, 4, Colors.SNOW_WHITE, {0,0,0,1}, width)
     y = y + 35
     local total_time = state.elapsed_time + (state.gates_missed or 0) * 3
     draw_block_text(Utils.format_time(total_time), x, y, 5, Colors.HOT_PINK, {0,0,0,1}, width)
     y = y + 60
+
+    -- TOTAL PENALTY
+    draw_block_text("PENALTY", x, y, 3, Colors.SNOW_WHITE, {0,0,0,1}, width)
+    y = y + 28
+    local penalty_seconds = (state.gates_missed or 0) * 3
+    local penalty_color = penalty_seconds > 0 and Colors.HOT_PINK or Colors.SNOW_WHITE
+    draw_block_text(string.format("+%ds", penalty_seconds), x, y, 4, penalty_color, {0,0,0,1}, width)
+    y = y + 55
+
+    -- GATES
+    draw_block_text("GATES", x, y, 4, Colors.SNOW_WHITE, {0,0,0,1}, width)
+    y = y + 35
+    draw_block_text(string.format("%d", state.gates_passed or 0), x, y, 5, Colors.MINT_GREEN, {0,0,0,1}, width)
+    y = y + 90
+
+    -- GROUP 2: Speed, Distance (bigger space before this group)
 
     -- SPEED (MPH)
     draw_block_text("SPEED", x, y, 4, Colors.SNOW_WHITE, {0,0,0,1}, width)
@@ -668,27 +695,13 @@ function SidebarHUD.draw_right(x, width, height, state)
     draw_block_text(string.format("%.0f", state.speed_mph or 0), x, y, 5, speed_color, {0,0,0,1}, width)
     y = y + 45
     draw_block_text("MPH", x, y, 3, Colors.SNOW_WHITE, {0,0,0,1}, width)
-    y = y + 40
-
-    -- GATES
-    draw_block_text("GATES", x, y, 4, Colors.SNOW_WHITE, {0,0,0,1}, width)
-    y = y + 35
-    draw_block_text(string.format("%d", state.gates_passed or 0), x, y, 5, Colors.MINT_GREEN, {0,0,0,1}, width)
     y = y + 60
-
-    -- PENALTIES
-    if state.gates_missed and state.gates_missed > 0 then
-        draw_block_text("PENALTY", x, y, 3, Colors.SNOW_WHITE, {0,0,0,1}, width)
-        y = y + 30
-        draw_block_text(string.format("+%ds", state.gates_missed * 3), x, y, 4, Colors.HOT_PINK, {0,0,0,1}, width)
-        y = y + 50
-    end
 
     -- DISTANCE
     draw_block_text("DIST", x, y, 4, Colors.SNOW_WHITE, {0,0,0,1}, width)
     y = y + 35
     draw_block_text(string.format("%dm", math.floor((state.distance or 0) / 10)), x, y, 5, Colors.ELECTRIC_BLUE, {0,0,0,1}, width)
-    y = y + 70
+    y = y + 60
 
     -- TUCK indicator
     if state.is_tucking then
