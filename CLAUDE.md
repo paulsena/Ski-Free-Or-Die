@@ -27,6 +27,20 @@ docs/
     └── yeti-mechanic-design.md   # Endless mode chase (engine-agnostic)
 ```
 
+## Component Documentation
+
+**When working on a task, READ the relevant doc(s) below first.**
+
+| Doc | Read when task mentions... |
+|-----|---------------------------|
+| [docs/gameplay.md](docs/gameplay.md) | skier, physics, speed, collision, crash, deflect, obstacles, gates, penalties, yeti |
+| [docs/audio.md](docs/audio.md) | music, sound, sfx, audio, tracks, waveform |
+| [docs/graphics.md](docs/graphics.md) | colors, drawing, sprites, particles, visual, palette |
+| [docs/controls.md](docs/controls.md) | keyboard, mouse, input, controls, keys, steering |
+| [docs/config.md](docs/config.md) | tuning, balance, tweak, constants, thresholds, difficulty values |
+| [docs/world-generation.md](docs/world-generation.md) | levels, tiles, procedural, generation, set pieces, spawning, difficulty curve |
+| [docs/ui.md](docs/ui.md) | menu, HUD, states, screens, leaderboard, high scores |
+
 ## Tech Stack
 
 **Frontend:** LÖVE (Love2D) 11.4+ with Lua 5.1
