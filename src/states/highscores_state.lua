@@ -53,12 +53,8 @@ function HighScoresState:enter(params)
         })
     end
 
-    -- Play awards music if coming from name entry, otherwise menu music
-    if came_from_entry then
-        Music.play("awards")
-    else
-        Music.play("menu")
-    end
+    -- Always play awards music on high scores screen
+    Music.play("awards")
 end
 
 function HighScoresState:exit()

@@ -37,6 +37,7 @@ local is_initialized = false
 
 -- Note frequencies (A4 = 440Hz tuning)
 local NOTES = {
+    C2 = 65.41, D2 = 73.42, E2 = 82.41, F2 = 87.31, G2 = 98.00, A2 = 110.00, B2 = 123.47,
     C3 = 130.81, D3 = 146.83, E3 = 164.81, F3 = 174.61, G3 = 196.00, A3 = 220.00, B3 = 246.94,
     C4 = 261.63, D4 = 293.66, E4 = 329.63, F4 = 349.23, G4 = 392.00, A4 = 440.00, B4 = 493.88,
     C5 = 523.25, D5 = 587.33, E5 = 659.26, F5 = 698.46, G5 = 783.99, A5 = 880.00, B5 = 987.77,
@@ -861,7 +862,7 @@ function Music.load()
 end
 
 -- Play a music track
--- @param track_name string: "menu", "gameplay", or "gameover"
+-- @param track_name string: "menu", "gameplay", "gameover", or "awards"
 function Music.play(track_name)
     if not is_initialized then
         Music.load()
