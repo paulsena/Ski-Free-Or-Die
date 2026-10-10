@@ -17,25 +17,21 @@ Zone-based turning using horizontal distance from skier (screen center = 180px).
 
 | Zone | Offset (px) | Position | Angle |
 |------|-------------|----------|-------|
-| Center | 0-30 | CENTER (4) | 0 |
-| Gentle | 31-80 | LEFT/RIGHT (3/5) | 30 |
-| Sharp | 81-140 | FAR_LEFT/FAR_RIGHT (2/6) | 60 |
-| Full Stop | 141+ | FULL_LEFT/FULL_RIGHT (1/7) | 90 |
+| Center | 0-30 | CENTER | 0 |
+| Gentle | 31-80 | LEFT/RIGHT | 30 |
+| Sharp | 81+ | FAR_LEFT/FAR_RIGHT | 60 |
 
-Thresholds defined at lines 40-43:
+There is no sideways full-stop turn: the skier always keeps moving downhill (web build).
+
+Thresholds:
 - `ZONE_CENTER = 30`
 - `ZONE_GENTLE = 80`
-- `ZONE_SHARP = 140`
 
 ### Tuck (Speed Boost)
 **+30% speed**, reduced turn control. Any of:
 - Left/Right mouse button
 - Down arrow / S key
 - Left/Right Shift
-
-### Sideways Push (when stopped/sliding)
-- A key while facing full left
-- D key while facing full right
 
 ### Pause/Menu
 - P: Toggle pause (play_state.lua:383)

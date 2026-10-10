@@ -18,13 +18,13 @@ DEFLECT_VX_FACTOR = 0.8    -- velocity reversal factor
 ### Positions (discrete, not continuous)
 | Index | Name        | Angle | Speed Mult | Notes           |
 |-------|-------------|-------|------------|-----------------|
-| 1     | FULL_LEFT   | -90   | 0          | Stop (sideways) |
-| 2     | FAR_LEFT    | -60   | 1.0        | Sharp turn      |
-| 3     | LEFT        | -30   | 1.0        | Gentle turn     |
-| 4     | CENTER      | 0     | 1.0        | Straight down   |
-| 5     | RIGHT       | 30    | 1.0        | Gentle turn     |
-| 6     | FAR_RIGHT   | 60    | 1.0        | Sharp turn      |
-| 7     | FULL_RIGHT  | 90    | 0          | Stop (sideways) |
+| 0     | FAR_LEFT    | -60   | 1.0        | Sharp turn      |
+| 1     | LEFT        | -30   | 1.0        | Gentle turn     |
+| 2     | CENTER      | 0     | 1.0        | Straight down   |
+| 3     | RIGHT       | 30    | 1.0        | Gentle turn     |
+| 4     | FAR_RIGHT   | 60    | 1.0        | Sharp turn      |
+
+The sideways full-stop positions (±90°) were removed in the web build; the skier can't stop.
 
 ### Key Functions
 - `Skier.new(x, y)` - constructor

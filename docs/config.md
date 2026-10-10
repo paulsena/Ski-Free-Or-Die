@@ -23,9 +23,6 @@ Quick reference for all tweakable game constants. Use this to tune game feel.
 | `HITBOX_RADIUS` | 8 | Collision radius (forgiving) |
 | `DEFLECT_VX_FACTOR` | 0.8 | X velocity reversal on deflect |
 | `SPEED_LERP_FACTOR` | 4 | Acceleration smoothing |
-| `STOP_LERP_FACTOR` | 3 | Deceleration inertia |
-| `STOPPED_THRESHOLD` | 5 | Speed below = stopped |
-| `SIDEWAYS_PUSH_SPEED` | 60 | Cross-country push speed |
 
 ## Mouse Control Zones (`src/entities/skier.lua`)
 
@@ -33,8 +30,7 @@ Quick reference for all tweakable game constants. Use this to tune game feel.
 |----------|-------|-------------|
 | `ZONE_CENTER` | 30 | 0-30px = straight (deadzone) |
 | `ZONE_GENTLE` | 80 | 31-80px = gentle turn |
-| `ZONE_SHARP` | 140 | 81-140px = sharp turn |
-| (beyond) | 141+ | Full brake/stop turn |
+| (beyond) | 81+ | Sharp turn (no full-stop turn) |
 
 ## Yeti Settings (`src/entities/yeti.lua`)
 
