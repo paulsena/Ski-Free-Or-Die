@@ -1,0 +1,23 @@
+{
+  "name": "ski-free-or-die",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "sprites": "tsx tools/render-sprites.ts",
+    "title": "tsx tools/quantize.ts ../assets/images/game_main_screen.png tools/out/title_quantized.png --size 360x480 --dither 0.5 --clean 1 && tsx tools/fix-title.ts tools/out/title_quantized.png public/images/title_screen.png"
+  },
+  "devDependencies": {
+    "@types/pngjs": "^6.0.5",
+    "pngjs": "^7.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.4",
+    "vitest": "^3.2.7"
+  }
+}

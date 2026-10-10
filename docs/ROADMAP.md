@@ -19,6 +19,8 @@
 | 6 | HUD & Polish | UI, visual feedback, basic audio | Complete |
 | 7 | Endless Mode | Infinite generation, Yeti chase | Complete |
 | 8 | Advanced Features | Tricks, ramps, meta-progression | Not Started |
+| A | Web Port | TypeScript + Vite + Canvas 2D port in `web/` | Complete |
+| B | Pixel-Art Overhaul | Palette-locked pixel sprites for the web build | Complete |
 
 ---
 
@@ -306,6 +308,31 @@
 
 - [ ] **8.6** Flow multiplier system
   - Visual feedback for sustained clean play
+
+---
+
+## Phase A: Web Port (Complete)
+
+The game was ported to TypeScript + Vite + Canvas 2D in `web/` (see `web/PORTING.md`). **The web build is the primary target from now on.** The Lua code is a frozen reference.
+
+---
+
+## Phase B: Pixel-Art Overhaul (Complete, 2026-10-10)
+
+**Plan:** `plans/phase-b-pixel-art.md`. Details of the result: `docs/graphics.md`.
+
+- [x] **B.1** Locked palette (`web/src/gfx/palette.ts`, 32 keys); `colors.ts` points at it
+- [x] **B.2** Sprite format + baking + crisp drawing (`gfx/sprite_def.ts`, `gfx/sprite.ts`)
+- [x] **B.3** Contact-sheet tool (`npm run sprites`) + sprite validation tests
+- [x] **B.4** Static sprites: trees (+ snowy variants), rock, snow mound, cabin (pink/blue roof swap), gates (state swaps), UI icons
+- [x] **B.5** Skier (7 positions from 4 poses + tuck variants + 2 crash frames) and yeti (3 run frames + 2 lunge frames), all code grids
+- [x] **B.6** Shared 5x7 bitmap font (`gfx/font.ts`) used by all `print/printf`
+- [x] **B.7** Title screen rebuilt at 360x480 on the palette, watermark removed (`npm run title`)
+- [x] **B.8** Removed dead `lib/sprites.ts`, docs updated
+
+**Still open (polish pass):** on-screen tap targets for name entry and "ENTER: Continue" on phones; pixel-perfect
+map diff against the Lua build (needs LÖVE installed); the yeti is drawn below the skier when it's about to catch
+them (pre-existing positioning in `Yeti.draw`, unchanged here).
 
 ---
 

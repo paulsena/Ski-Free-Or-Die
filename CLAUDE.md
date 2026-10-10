@@ -54,8 +54,17 @@ docs/
 
 ## Running the Game
 
+**Web build (primary going forward):** TypeScript + Vite + Canvas 2D port in `web/`. It's a faithful port of the Lua code; see `web/PORTING.md` for conventions. Change the web version for new work.
 ```bash
-cd SkiFreeOrDie
+cd web
+npm install
+npm run dev      # http://localhost:5173
+npm test         # Vitest suite
+npm run build    # static site in web/dist (deployed to GitHub Pages by .github/workflows/deploy-web.yml)
+```
+
+**Original LÖVE build (reference):**
+```bash
 love .
 ```
 
