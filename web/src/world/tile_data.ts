@@ -158,7 +158,7 @@ export default class TileData {
     static GATE_SPACING: Record<string, number> = {
         wide: 120,      // Easy: lots of room
         normal: 100,    // Medium: moderate challenge
-        tight: 75       // Hard: precision required
+        tight: 70       // Hard: precision required (5 gates fit in a tile)
     };
 
 

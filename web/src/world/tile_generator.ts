@@ -22,6 +22,14 @@ export default class TileGenerator {
     // Set piece insertion points (tile indices for a 20-tile course)
     static SET_PIECE_POSITIONS = [8, 15]; // Midpoint and near end (one-based course positions)
 
+    // Gate reachability: the skier's sharpest carve is 60 degrees (tan 60 = ~1.73 px across per px down).
+    // Gates are placed so reaching the next one never needs more than this ratio, leaving headroom.
+    static GATE_MAX_LATERAL_RATIO = 0.9;
+    static GATE_LINE_MARGIN = 12;      // How far inside a gate's poles the skier is assumed to pass
+    static GATE_CLEAR_X = 10;          // Extra obstacle-free width beyond each pole
+    static GATE_CLEAR_ABOVE = 60;      // Obstacle-free run-in above the gate line
+    static GATE_CLEAR_BELOW = 20;
+
     rng: SeededRandom;
     seed: number;
     mode: string;
@@ -30,6 +38,7 @@ export default class TileGenerator {
     last_tile_difficulty = 0;
     hard_tile_count = 0; // Track consecutive hard tiles
     tiles_since_speed = 0; // Track tiles since last speed tile
+    last_gate: {x: number; y: number} | undefined; // Previous gate, for reachability across tiles
 
     constructor(seed: number, mode?: string) {
         this.rng = SeededRandom.new(seed);
@@ -49,6 +58,7 @@ export default class TileGenerator {
         this.last_tile_difficulty = 0;
         this.hard_tile_count = 0;
         this.tiles_since_speed = 0;
+        this.last_gate = undefined;
     }
 
     // Generate a complete time trial course
@@ -204,12 +214,14 @@ export default class TileGenerator {
         // Generate gates for slalom tiles
         if (tile.gate_count) {
             const [min_gates, max_gates] = tile.gate_count;
-            const num_gates = this.rng.random_int(min_gates, max_gates);
+            let num_gates = this.rng.random_int(min_gates, max_gates);
             if (num_gates > 0) {
                 const spacing = TileData.GATE_SPACING[tile.gate_spacing ?? "normal"] ?? 80;
-                const available_height = TileData.TILE_HEIGHT - 2 * TileData.TRANSITION_ZONE;
-                const actual_spacing = Math.min(spacing, available_height / num_gates);
                 const start_y = tile.y_start + TileData.TRANSITION_ZONE + 20;
+                const last_y = tile.y_end - TileData.TRANSITION_ZONE;
+                // Never squeeze gates below their spacing; drop gates that don't fit instead
+                const max_fit = Math.floor((last_y - start_y) / spacing) + 1;
+                num_gates = Math.min(num_gates, max_fit);
                 let alternate = this.rng.random_bool(); // Start left or right
                 for (let i = 0; i < num_gates; i++) {
                     // Alternate gates left and right
@@ -218,10 +230,35 @@ export default class TileGenerator {
                     alternate = !alternate;
                     // Add some random variation
                     x = x + this.rng.random_float(-20, 20);
-                    tile.gates.push({x: x, y: start_y + i * actual_spacing});
+                    const y = start_y + i * spacing;
+                    x = this.clamp_gate_reachable(x, y);
+                    tile.gates.push({x: x, y: y});
+                    this.last_gate = {x: x, y: y};
                 }
+                this.clear_obstacles_near_gates(tile);
             }
         }
+    }
+
+    // Pull a gate toward the previous one so the skier can reach it from there
+    clamp_gate_reachable(x: number, y: number): number {
+        if (!this.last_gate) return x;
+        const dy = y - this.last_gate.y;
+        const slack = Gate.WIDTH - 2 * TileGenerator.GATE_LINE_MARGIN;
+        const max_dx = slack + dy * TileGenerator.GATE_MAX_LATERAL_RATIO;
+        return Math.max(this.last_gate.x - max_dx, Math.min(this.last_gate.x + max_dx, x));
+    }
+
+    // Remove obstacles sitting in a gate opening or right in front of it
+    clear_obstacles_near_gates(tile: TileData): void {
+        tile.obstacles = tile.obstacles.filter((obs: {x: number; y: number}) => {
+            for (const gate of tile.gates) {
+                const in_opening = Math.abs(obs.x - gate.x) <= Gate.WIDTH / 2 + TileGenerator.GATE_CLEAR_X;
+                const near_line = obs.y > gate.y - TileGenerator.GATE_CLEAR_ABOVE && obs.y < gate.y + TileGenerator.GATE_CLEAR_BELOW;
+                if (in_opening && near_line) return false;
+            }
+            return true;
+        });
     }
 
     // Populate set piece tiles with handcrafted content
